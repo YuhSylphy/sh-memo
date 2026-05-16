@@ -1,0 +1,158 @@
+.app-shell {
+	min-height: 100vh;
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+	gap: 24px;
+	padding: 32px;
+	box-sizing: border-box;
+}
+
+.hero-panel,
+.workspace-panel {
+	position: relative;
+	overflow: hidden;
+	border: 1px solid rgba(112, 78, 47, 0.14);
+	border-radius: 28px;
+	background: rgba(255, 250, 244, 0.84);
+	box-shadow: 0 20px 60px rgba(82, 49, 24, 0.12);
+	backdrop-filter: blur(14px);
+}
+
+.hero-panel {
+	padding: 40px;
+}
+
+.hero-panel::after,
+.workspace-panel::after {
+	content: '';
+	position: absolute;
+	inset: auto -80px -80px auto;
+	width: 220px;
+	height: 220px;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		rgba(202, 118, 54, 0.22),
+		transparent 70%
+	);
+}
+
+.workspace-panel {
+	display: flex;
+	align-items: center;
+	padding: 24px;
+}
+
+.eyebrow {
+	margin: 0 0 16px;
+	font-size: 0.82rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #8a5a32;
+}
+
+.lead {
+	max-width: 38rem;
+	color: #6b5d51;
+}
+
+.feature-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+	padding: 0;
+	margin: 32px 0 0;
+	list-style: none;
+}
+
+.feature-grid li {
+	padding: 16px 18px;
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.72);
+	border: 1px solid rgba(138, 90, 50, 0.12);
+	font-weight: 600;
+}
+
+.counter-panel {
+	width: 100%;
+	padding: 28px;
+	border-radius: 24px;
+	background: linear-gradient(160deg, #fffdf9 0%, #f7ecdd 100%);
+	border: 1px solid rgba(138, 90, 50, 0.14);
+}
+
+.counter-panel h2 {
+	margin: 0;
+}
+
+.counter-copy {
+	margin-top: 10px;
+	color: #6b5d51;
+}
+
+.counter-value {
+	margin: 24px 0 8px;
+	font-size: clamp(2.8rem, 6vw, 4.8rem);
+	line-height: 1;
+	letter-spacing: -0.06em;
+}
+
+.counter-status {
+	min-height: 1.5rem;
+	margin: 0;
+	color: #8a5a32;
+	font-weight: 700;
+}
+
+.counter-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 24px;
+}
+
+.counter-button {
+	border: 0;
+	border-radius: 999px;
+	padding: 12px 18px;
+	background: #2f2118;
+	color: #fffaf4;
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+	transition:
+		transform 160ms ease,
+		box-shadow 160ms ease,
+		background 160ms ease;
+}
+
+.counter-button:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 10px 20px rgba(47, 33, 24, 0.18);
+}
+
+.counter-button:focus-visible {
+	outline: 3px solid rgba(202, 118, 54, 0.32);
+	outline-offset: 3px;
+}
+
+.counter-button.secondary {
+	background: #d5b594;
+	color: #2f2118;
+}
+
+@media (max-width: 960px) {
+	.app-shell {
+		grid-template-columns: 1fr;
+		padding: 20px;
+	}
+
+	.hero-panel {
+		padding: 28px;
+	}
+
+	.feature-grid {
+		grid-template-columns: 1fr;
+	}
+}
