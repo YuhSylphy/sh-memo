@@ -8,7 +8,7 @@ import {
 import { Provider } from 'react-redux';
 import './index.css';
 import App from './App.tsx';
-import { store } from './store';
+import { store } from './core/store';
 
 const theme = createTheme({
 	palette: {
