@@ -1,10 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-	createTheme,
-	CssBaseline,
-	ThemeProvider,
-} from '@mui/material';
+import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { Provider } from 'react-redux';
 import './index.css';
 import App from './App.tsx';
@@ -27,8 +23,7 @@ const theme = createTheme({
 		borderRadius: 16,
 	},
 	typography: {
-		fontFamily:
-			'"Aptos", "Segoe UI Variable", "Segoe UI", sans-serif',
+		fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", sans-serif',
 		h1: {
 			fontFamily: '"Iowan Old Style", Georgia, serif',
 			fontWeight: 600,

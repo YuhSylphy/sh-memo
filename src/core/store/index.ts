@@ -19,9 +19,7 @@ const createEpicManager = () => {
 	const registeredEpics = new Set<AppEpic>();
 
 	const rootEpic: AppEpic = (action$, state$, dependencies) =>
-		epic$.pipe(
-			mergeMap((epic) => epic(action$, state$, dependencies)),
-		);
+		epic$.pipe(mergeMap((epic) => epic(action$, state$, dependencies)));
 
 	const addEpic: AddEpic = (epic) => {
 		if (registeredEpics.has(epic)) {

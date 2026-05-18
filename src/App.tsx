@@ -1,7 +1,7 @@
-import { SamplePage } from './pages/sample'
+import { SamplePage } from './pages/sample';
 
 function App() {
-	return <SamplePage />
+	return <SamplePage />;
 }
 
-export default App
+export default App;

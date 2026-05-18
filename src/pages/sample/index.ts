@@ -1,1 +1,1 @@
-export { SamplePage } from './components/SamplePage'
+export { SamplePage } from './components/SamplePage';

@@ -119,9 +119,12 @@ function CounterPanel() {
 							>
 								Redux + RxJS
 							</Typography>
-							<Typography variant="h5">Counter workflow</Typography>
+							<Typography variant="h5">
+								Counter workflow
+							</Typography>
 							<Typography variant="body2" color="text.secondary">
-								MUI ボタンで dispatch し、非同期は epic 経由で反映します。
+								MUI ボタンで dispatch し、非同期は epic
+								経由で反映します。
 							</Typography>
 						</Stack>
 						<Chip
@@ -130,7 +133,9 @@ function CounterPanel() {
 									? 'Syncing through the epic...'
 									: `Current value: ${value}`
 							}
-							color={status === 'loading' ? 'warning' : 'secondary'}
+							color={
+								status === 'loading' ? 'warning' : 'secondary'
+							}
 							variant="filled"
 							size="small"
 						/>
@@ -162,7 +167,9 @@ function CounterPanel() {
 							startIcon={<AutoModeRounded />}
 							disabled={!isAsyncReady}
 							onClick={() =>
-								dispatch(counterActions.incrementAsyncRequested(1))
+								dispatch(
+									counterActions.incrementAsyncRequested(1),
+								)
 							}
 						>
 							Increment async

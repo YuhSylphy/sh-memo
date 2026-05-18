@@ -1,9 +1,9 @@
-import AutoAwesomeRounded from '@mui/icons-material/AutoAwesomeRounded'
-import CategoryRounded from '@mui/icons-material/CategoryRounded'
-import DesignServicesRounded from '@mui/icons-material/DesignServicesRounded'
-import HubRounded from '@mui/icons-material/HubRounded'
-import PrecisionManufacturingRounded from '@mui/icons-material/PrecisionManufacturingRounded'
-import ScienceRounded from '@mui/icons-material/ScienceRounded'
+import AutoAwesomeRounded from '@mui/icons-material/AutoAwesomeRounded';
+import CategoryRounded from '@mui/icons-material/CategoryRounded';
+import DesignServicesRounded from '@mui/icons-material/DesignServicesRounded';
+import HubRounded from '@mui/icons-material/HubRounded';
+import PrecisionManufacturingRounded from '@mui/icons-material/PrecisionManufacturingRounded';
+import ScienceRounded from '@mui/icons-material/ScienceRounded';
 import {
 	Box,
 	Chip,
@@ -12,8 +12,8 @@ import {
 	Paper,
 	Stack,
 	Typography,
-} from '@mui/material'
-import CounterPanel from '../../../feature/counter/components/CounterPanel'
+} from '@mui/material';
+import CounterPanel from '../../../feature/counter/components/CounterPanel';
 
 const featureItems = [
 	{
@@ -40,7 +40,7 @@ const featureItems = [
 		icon: <DesignServicesRounded fontSize="small" />,
 		label: 'Storybook and design references',
 	},
-]
+];
 
 export function SamplePage() {
 	return (
@@ -121,5 +121,5 @@ export function SamplePage() {
 				</Grid>
 			</Container>
 		</Box>
-	)
+	);
 }
