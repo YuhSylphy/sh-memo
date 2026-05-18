@@ -1,5 +1,4 @@
 import { Navigate, type RouteObject } from 'react-router-dom';
-import { SamplePage } from '../pages/sample';
 
 export const appRoutes: RouteObject[] = [
 	{
@@ -11,7 +10,10 @@ export const appRoutes: RouteObject[] = [
 			},
 			{
 				path: 'sample',
-				Component: SamplePage,
+				lazy: async () => {
+					const { SamplePage } = await import('../pages/sample/lazy');
+					return { Component: SamplePage };
+				},
 			},
 		],
 	},

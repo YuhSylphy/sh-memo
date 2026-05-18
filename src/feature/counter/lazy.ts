@@ -1,13 +1,7 @@
-import type { AddEpic } from '../../core/store';
+import { addStoreEpic } from '../../core/store';
+import { counterEpic } from './state/counterEpic';
 
-let isCounterFeatureRegistered = false;
+// Side effect: register the counter epic when this module is loaded
+addStoreEpic(counterEpic);
 
-export const registerCounterFeature = async (addEpic: AddEpic) => {
-	if (isCounterFeatureRegistered) {
-		return;
-	}
-
-	const { counterEpic } = await import('./state/counterEpic');
-	addEpic(counterEpic);
-	isCounterFeatureRegistered = true;
-};
+export { default as CounterPanel } from './components/CounterPanel';

@@ -13,7 +13,7 @@ import {
 	Stack,
 	Typography,
 } from '@mui/material';
-import CounterPanel from '../../../feature/counter/components/CounterPanel';
+import { CounterPanel } from '../../../feature/counter/lazy';
 
 const featureItems = [
 	{

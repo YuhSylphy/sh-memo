@@ -2,15 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it } from 'vitest';
-import { createAppStore } from '../../../core/store';
-import CounterPanel from './CounterPanel';
+import { store } from '../../../core/store';
+import { CounterPanel } from '../lazy';
 
 describe('CounterPanel', () => {
 	it('increments through the epic after a short delay', async () => {
 		const user = userEvent.setup();
 
 		render(
-			<Provider store={createAppStore()}>
+			<Provider store={store}>
 				<CounterPanel />
 			</Provider>,
 		);

@@ -14,12 +14,9 @@ import {
 	type GridColDef,
 	type GridValidRowModel,
 } from '@mui/x-data-grid';
-import { useEffect, useMemo, useState } from 'react';
-import { useStore } from 'react-redux';
-import type { AppStore } from '../../../core/store';
+import { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../core/store/hooks';
 import { counterActions } from '../index';
-import { registerCounterFeature } from '../lazy';
 
 type CounterGridRow = GridValidRowModel & {
 	id: string;
@@ -54,15 +51,7 @@ const columns: GridColDef<CounterGridRow>[] = [
 
 function CounterPanel() {
 	const dispatch = useAppDispatch();
-	const store = useStore() as AppStore;
 	const { status, value } = useAppSelector((state) => state.counter);
-	const [isAsyncReady, setIsAsyncReady] = useState(false);
-
-	useEffect(() => {
-		void registerCounterFeature(store.addEpic).then(() => {
-			setIsAsyncReady(true);
-		});
-	}, [store]);
 
 	const rows = useMemo<CounterGridRow[]>(
 		() => [
@@ -165,7 +154,6 @@ function CounterPanel() {
 							variant="contained"
 							color="secondary"
 							startIcon={<AutoModeRounded />}
-							disabled={!isAsyncReady}
 							onClick={() =>
 								dispatch(
 									counterActions.incrementAsyncRequested(1),
