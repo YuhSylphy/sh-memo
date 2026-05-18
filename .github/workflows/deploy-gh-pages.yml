@@ -1,0 +1,75 @@
+name: Deploy docs to gh-pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout or create gh-pages
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
+            git checkout -B gh-pages origin/gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            git commit --allow-empty -m "chore: initialize gh-pages branch"
+          fi
+
+      - name: Merge main into gh-pages with merge commit
+        run: |
+          set -euo pipefail
+          git merge --no-ff --no-edit --allow-unrelated-histories origin/main -m "chore: merge main into gh-pages [skip ci]"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build production bundle
+        run: yarn build
+
+      - name: Update docs directory
+        run: |
+          set -euo pipefail
+          rm -rf docs
+          mkdir -p docs
+          cp -R dist/. docs/
+
+      - name: Commit docs update if needed
+        run: |
+          set -euo pipefail
+          git add docs
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update docs from ${GITHUB_SHA}"
+          fi
+
+      - name: Push gh-pages branch
+        run: git push origin gh-pages
