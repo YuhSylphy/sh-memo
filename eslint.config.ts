@@ -19,6 +19,7 @@ export default defineConfig([
 			reactRefresh.configs.vite,
 			{
 				rules: {
+					semi: ['error', 'always'],
 					'react/react-in-jsx-scope': 'off',
 				},
 			},
