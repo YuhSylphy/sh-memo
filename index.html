@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>app</title>
+    <script>
+      // Resolve SPA route redirected via public/404.html on GitHub Pages.
+      (function () {
+        const query = window.location.search;
+        if (query.startsWith('?p=')) {
+          const route = decodeURIComponent(query.substr(3));
+          window.history.replaceState(null, '', route);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

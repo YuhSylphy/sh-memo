@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>app</title>
+    <script>
+      // Redirect unknown GitHub Pages paths to the SPA entry with a route query.
+      (function () {
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        const isGithubProjectPages = /\.github\.io$/i.test(window.location.hostname) && pathSegments.length > 0;
+        const basePath = isGithubProjectPages ? '/' + pathSegments[0] : '';
+        const fullPath = window.location.pathname + window.location.search + window.location.hash;
+        const routePath = basePath && fullPath.startsWith(basePath)
+          ? fullPath.slice(basePath.length)
+          : fullPath;
+        const normalizedRoute = routePath.startsWith('/') ? routePath : '/' + routePath;
+        window.location.replace((basePath || '') + '/?p=' + encodeURIComponent(normalizedRoute));
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
