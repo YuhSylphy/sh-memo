@@ -1,7 +1,7 @@
-import { SamplePage } from './pages/sample';
+import { AppRoutes } from './routes/AppRoutes';
 
 function App() {
-	return <SamplePage />;
+	return <AppRoutes />;
 }
 
 export default App;
