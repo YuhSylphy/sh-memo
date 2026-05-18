@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
 import { createEpicMiddleware, type Epic } from 'redux-observable';
 import { BehaviorSubject, EMPTY, mergeMap } from 'rxjs';
-import { counterReducer } from '../../feature/counter';
+import { counterReducer } from '../../feature/sample';
 
 const rootReducer = combineReducers({
 	counter: counterReducer,
@@ -19,9 +19,7 @@ const createEpicManager = () => {
 	const registeredEpics = new Set<AppEpic>();
 
 	const rootEpic: AppEpic = (action$, state$, dependencies) =>
-		epic$.pipe(
-			mergeMap((epic) => epic(action$, state$, dependencies)),
-		);
+		epic$.pipe(mergeMap((epic) => epic(action$, state$, dependencies)));
 
 	const addEpic: AddEpic = (epic) => {
 		if (registeredEpics.has(epic)) {
