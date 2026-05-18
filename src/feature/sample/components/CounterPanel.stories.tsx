@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Provider } from 'react-redux';
 import { createAppStore } from '../../../core/store';
-import CounterPanel from './CounterPanel';
+import { CounterPanel } from './CounterPanel';
 
 const figmaUrl =
 	'https://www.figma.com/file/REPLACE_WITH_YOUR_FILE/CounterPanel';

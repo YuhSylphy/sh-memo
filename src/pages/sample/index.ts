@@ -1,1 +1,3 @@
-// No startup exports for this page
+// lazy
+import { SamplePage } from './components/SamplePage';
+export default SamplePage;

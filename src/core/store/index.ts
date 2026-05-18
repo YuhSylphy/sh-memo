@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
 import { createEpicMiddleware, type Epic } from 'redux-observable';
 import { BehaviorSubject, EMPTY, mergeMap } from 'rxjs';
-import { counterReducer } from '../../feature/counter';
+import { counterReducer } from '../../feature/sample';
 
 const rootReducer = combineReducers({
 	counter: counterReducer,

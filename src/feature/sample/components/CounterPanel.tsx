@@ -49,7 +49,7 @@ const columns: GridColDef<CounterGridRow>[] = [
 	},
 ];
 
-function CounterPanel() {
+export function CounterPanel() {
 	const dispatch = useAppDispatch();
 	const { status, value } = useAppSelector((state) => state.counter);
 
@@ -185,5 +185,3 @@ function CounterPanel() {
 		</Card>
 	);
 }
-
-export default CounterPanel;

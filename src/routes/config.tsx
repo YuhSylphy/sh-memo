@@ -10,10 +10,9 @@ export const appRoutes: RouteObject[] = [
 			},
 			{
 				path: 'sample',
-				lazy: async () => {
-					const { SamplePage } = await import('../pages/sample/lazy');
-					return { Component: SamplePage };
-				},
+				lazy: async () => ({
+					Component: (await import('../pages/sample')).default,
+				}),
 			},
 		],
 	},
