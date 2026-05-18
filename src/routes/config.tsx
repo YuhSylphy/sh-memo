@@ -1,5 +1,9 @@
 import { Navigate, type RouteObject } from 'react-router-dom';
 
+export type RouteHandle = {
+	title?: string;
+};
+
 export const appRoutes: RouteObject[] = [
 	{
 		path: '/',
@@ -10,6 +14,7 @@ export const appRoutes: RouteObject[] = [
 			},
 			{
 				path: 'sample',
+				handle: { title: 'Sample' } satisfies RouteHandle,
 				lazy: async () => ({
 					Component: (await import('../pages/sample')).default,
 				}),
