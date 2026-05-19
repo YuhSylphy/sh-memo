@@ -36,6 +36,15 @@ export const appNavItems: AppNavItem[] = [
 			},
 		],
 	},
+	{
+		label: 'ドキュメント',
+		to: '/docs/:documentId', // パラメータ化された1本のルート
+		title: 'Document',
+		inMenu: false, // メニューには表示しない
+		lazy: async () => ({
+			Component: (await import('../../pages/docs')).default,
+		}),
+	},
 ];
 
 /** ルート (/) へのアクセス時にリダイレクトするパス */
