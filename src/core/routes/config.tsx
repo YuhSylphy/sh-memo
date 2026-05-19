@@ -1,17 +1,9 @@
-import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
-import { MainFrame } from '../frame';
+import { Navigate, type RouteObject } from 'react-router-dom';
+import { FramedLayout } from './FramedLayout';
 
 export type RouteHandle = {
 	title?: string;
 };
-
-function FramedLayout() {
-	return (
-		<MainFrame>
-			<Outlet />
-		</MainFrame>
-	);
-}
 
 export const appRoutes: RouteObject[] = [
 	{
