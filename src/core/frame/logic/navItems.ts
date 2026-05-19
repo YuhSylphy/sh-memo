@@ -14,7 +14,12 @@ function toMenuTree(items: AppNavItem[]): NavItem[] {
 		if (item.inMenu === false) continue;
 		const children = item.children ? toMenuTree(item.children) : undefined;
 		if (item.to ?? (children && children.length > 0)) {
-			result.push({ label: item.label, to: item.to, icon: item.icon, children });
+			result.push({
+				label: item.label,
+				to: item.to,
+				icon: item.icon,
+				children,
+			});
 		}
 	}
 	return result;
@@ -28,4 +33,3 @@ export async function fetchNavItems(): Promise<NavItem[]> {
 	// TODO: 認証付きAPIからアイテムを取得してstaticNavItemsとマージする
 	return toMenuTree(appNavItems);
 }
-
