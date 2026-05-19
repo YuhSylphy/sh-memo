@@ -7,7 +7,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-	globalIgnores(['coverage', 'dist', 'storybook-static']),
+	globalIgnores(['reports', 'dist', 'storybook-static']),
 	{
 		files: ['**/*.{ts,tsx}'],
 		extends: [
