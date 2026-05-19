@@ -4,9 +4,11 @@ import {
 	CircularProgress,
 	Container,
 	Drawer,
+	Icon,
 	IconButton,
 	List,
 	ListItemButton,
+	ListItemIcon,
 	ListItemText,
 	Toolbar,
 	Typography,
@@ -22,6 +24,28 @@ type NavMenuListProps = {
 	onSelect: () => void;
 };
 
+function NavItemIcon({ icon }: { icon: NavItem['icon'] }) {
+	switch (typeof icon) {
+		case 'string': {
+			return (
+				<ListItemIcon>
+					<Icon>{icon}</Icon>
+				</ListItemIcon>
+			);
+		}
+		case 'function': {
+			const IconComponent = icon;
+			return (
+				<ListItemIcon>
+					<IconComponent />
+				</ListItemIcon>
+			);
+		}
+		default:
+			return null;
+	}
+}
+
 function NavMenuList({ promise, onSelect }: NavMenuListProps) {
 	const items = use(promise);
 	return (
@@ -33,6 +57,7 @@ function NavMenuList({ promise, onSelect }: NavMenuListProps) {
 					to={item.to}
 					onClick={onSelect}
 				>
+					<NavItemIcon icon={item.icon} />
 					<ListItemText primary={item.label} />
 				</ListItemButton>
 			))}
@@ -45,7 +70,13 @@ export function MainFrame({ children }: PropsWithChildren) {
 	const [navItemsPromise] = useState(() => fetchNavItems());
 
 	return (
-		<Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+		<Box
+			sx={{
+				display: 'flex',
+				flexDirection: 'column',
+				minHeight: '100vh',
+			}}
+		>
 			<AppBar position="static">
 				<Toolbar>
 					<IconButton
@@ -63,14 +94,16 @@ export function MainFrame({ children }: PropsWithChildren) {
 				</Toolbar>
 			</AppBar>
 
-			<Drawer
-				open={drawerOpen}
-				onClose={() => setDrawerOpen(false)}
-			>
-				<Typography variant="subtitle1" sx={{ px: 2, py: 1.5, fontWeight: 'bold' }}>
+			<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+				<Typography
+					variant="subtitle1"
+					sx={{ px: 2, py: 1.5, fontWeight: 'bold' }}
+				>
 					Menu
 				</Typography>
-				<Suspense fallback={<CircularProgress sx={{ m: 2 }} size={24} />}>
+				<Suspense
+					fallback={<CircularProgress sx={{ m: 2 }} size={24} />}
+				>
 					<NavMenuList
 						promise={navItemsPromise}
 						onSelect={() => setDrawerOpen(false)}

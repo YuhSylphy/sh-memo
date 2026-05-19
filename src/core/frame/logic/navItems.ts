@@ -1,10 +1,14 @@
+import type { ComponentType } from 'react';
+
 export type NavItem = {
 	label: string;
 	to: string;
+	/** MUI SvgIcon コンポーネント、または Material Icons のリガチャ文字列 */
+	icon?: ComponentType | string;
 };
 
 const staticNavItems: NavItem[] = [
-	{ label: 'サンプルページ', to: '/sample' },
+	{ label: 'サンプルページ', to: '/sample', icon: 'science' },
 ];
 
 /**
