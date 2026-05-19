@@ -1,6 +1,7 @@
 import {
 	AppBar,
 	Box,
+	CircularProgress,
 	Container,
 	Drawer,
 	IconButton,
@@ -11,21 +12,37 @@ import {
 	Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useState } from 'react';
+import { Suspense, use, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import { Link } from 'react-router-dom';
+import { type NavItem, fetchNavItems } from '../logic/navItems';
 
-type NavItem = {
-	label: string;
-	to: string;
+type NavMenuListProps = {
+	promise: Promise<NavItem[]>;
+	onSelect: () => void;
 };
 
-export const navItems: NavItem[] = [
-	{ label: 'サンプルページ', to: '/sample' },
-];
+function NavMenuList({ promise, onSelect }: NavMenuListProps) {
+	const items = use(promise);
+	return (
+		<List sx={{ width: 240 }}>
+			{items.map((item) => (
+				<ListItemButton
+					key={item.to}
+					component={Link}
+					to={item.to}
+					onClick={onSelect}
+				>
+					<ListItemText primary={item.label} />
+				</ListItemButton>
+			))}
+		</List>
+	);
+}
 
 export function MainFrame({ children }: PropsWithChildren) {
 	const [drawerOpen, setDrawerOpen] = useState(false);
+	const [navItemsPromise] = useState(() => fetchNavItems());
 
 	return (
 		<Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -53,18 +70,12 @@ export function MainFrame({ children }: PropsWithChildren) {
 				<Typography variant="subtitle1" sx={{ px: 2, py: 1.5, fontWeight: 'bold' }}>
 					Menu
 				</Typography>
-				<List sx={{ width: 240 }}>
-					{navItems.map((item) => (
-						<ListItemButton
-							key={item.to}
-							component={Link}
-							to={item.to}
-							onClick={() => setDrawerOpen(false)}
-						>
-							<ListItemText primary={item.label} />
-						</ListItemButton>
-					))}
-				</List>
+				<Suspense fallback={<CircularProgress sx={{ m: 2 }} size={24} />}>
+					<NavMenuList
+						promise={navItemsPromise}
+						onSelect={() => setDrawerOpen(false)}
+					/>
+				</Suspense>
 			</Drawer>
 
 			<Container component="main" sx={{ flex: 1, py: 3 }}>
