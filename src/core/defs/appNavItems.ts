@@ -22,6 +22,25 @@ export type AppNavItem = {
 
 export const appNavItems: AppNavItem[] = [
 	{
+		label: '設定',
+		to: '/config',
+		title: 'Config',
+		icon: 'settings',
+		lazy: async () => ({
+			Component: (await import('../../pages/config')).default,
+		}),
+	},
+	{
+		label: 'ドキュメント',
+		to: '/docs/:documentId', // パラメータ化された1本のルート
+		title: 'Document',
+		inMenu: false, // メニューには表示しない
+		lazy: async () => ({
+			Component: (await import('../../pages/docs')).default,
+		}),
+	},
+
+	{
 		label: 'サンプル',
 		icon: 'science',
 		children: [
@@ -35,15 +54,6 @@ export const appNavItems: AppNavItem[] = [
 				}),
 			},
 		],
-	},
-	{
-		label: 'ドキュメント',
-		to: '/docs/:documentId', // パラメータ化された1本のルート
-		title: 'Document',
-		inMenu: false, // メニューには表示しない
-		lazy: async () => ({
-			Component: (await import('../../pages/docs')).default,
-		}),
 	},
 ];
 
