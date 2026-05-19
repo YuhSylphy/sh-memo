@@ -37,3 +37,6 @@ export const appNavItems: AppNavItem[] = [
 		],
 	},
 ];
+
+/** ルート (/) へのアクセス時にリダイレクトするパス */
+export const rootRedirectTo = '/sample';

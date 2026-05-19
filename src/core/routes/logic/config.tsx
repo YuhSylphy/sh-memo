@@ -1,7 +1,7 @@
 import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
 import { FramedLayout } from '../components/FramedLayout';
 import { buildRoutes } from './buildRoutes';
-import { appNavItems } from '../../defs/appNavItems';
+import { appNavItems, rootRedirectTo } from '../../defs/appNavItems';
 
 export type { RouteHandle } from './buildRoutes';
 
@@ -13,7 +13,7 @@ export const appRoutes: RouteObject[] = [
 		children: [
 			{
 				index: true,
-				element: <Navigate to="/sample" replace />,
+				element: <Navigate to={rootRedirectTo} replace />,
 			},
 
 			// MainFrame あり
