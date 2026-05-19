@@ -1,4 +1,9 @@
-import { Outlet, RouterProvider, createBrowserRouter, useMatches } from 'react-router-dom';
+import {
+	Outlet,
+	RouterProvider,
+	createBrowserRouter,
+	useMatches,
+} from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { type RouteHandle, appRoutes } from './config';
 

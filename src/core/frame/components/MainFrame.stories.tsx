@@ -27,4 +27,3 @@ export const Default: Story = {
 		children: <Typography>Page content goes here.</Typography>,
 	},
 };
-
