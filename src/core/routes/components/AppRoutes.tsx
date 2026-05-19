@@ -5,7 +5,7 @@ import {
 	useMatches,
 } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { type RouteHandle, appRoutes } from './config';
+import { type RouteHandle, appRoutes } from '../logic/config';
 
 const APP_NAME = 'app';
 
