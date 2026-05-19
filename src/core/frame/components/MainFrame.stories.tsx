@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Typography } from '@mui/material';
+import { MemoryRouter } from 'react-router-dom';
 import { MainFrame } from './MainFrame';
 
 const meta = {
@@ -8,6 +9,13 @@ const meta = {
 	parameters: {
 		layout: 'fullscreen',
 	},
+	decorators: [
+		(Story) => (
+			<MemoryRouter>
+				<Story />
+			</MemoryRouter>
+		),
+	],
 } satisfies Meta<typeof MainFrame>;
 
 export default meta;
@@ -19,3 +27,4 @@ export const Default: Story = {
 		children: <Typography>Page content goes here.</Typography>,
 	},
 };
+
