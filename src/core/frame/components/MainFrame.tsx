@@ -2,6 +2,7 @@ import {
 	AppBar,
 	Box,
 	CircularProgress,
+	Collapse,
 	Container,
 	Drawer,
 	Icon,
@@ -14,6 +15,8 @@ import {
 	Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 import { Suspense, use, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import { Link } from 'react-router-dom';
@@ -46,21 +49,71 @@ function NavItemIcon({ icon }: { icon: NavItem['icon'] }) {
 	}
 }
 
+type NavMenuItemsProps = {
+	items: NavItem[];
+	onSelect: () => void;
+	depth?: number;
+};
+
+function NavMenuItems({ items, onSelect, depth = 0 }: NavMenuItemsProps) {
+	const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set());
+
+	const toggleOpen = (label: string) => {
+		setOpenKeys((prev) => {
+			const next = new Set(prev);
+			if (next.has(label)) {
+				next.delete(label);
+			} else {
+				next.add(label);
+			}
+			return next;
+		});
+	};
+
+	return (
+		<>
+			{items.map((item) => {
+				const hasChildren = item.children && item.children.length > 0;
+				const isOpen = openKeys.has(item.label);
+
+				return (
+					<div key={item.label}>
+						<ListItemButton
+							sx={{ pl: 2 + depth * 2 }}
+							{...(hasChildren
+								? { onClick: () => toggleOpen(item.label) }
+								: {
+										component: Link,
+										to: item.to ?? '/',
+										onClick: onSelect,
+									})}
+						>
+							<NavItemIcon icon={item.icon} />
+							<ListItemText primary={item.label} />
+							{hasChildren &&
+								(isOpen ? <ExpandLess /> : <ExpandMore />)}
+						</ListItemButton>
+						{hasChildren && (
+							<Collapse in={isOpen} timeout="auto" unmountOnExit>
+								<NavMenuItems
+									items={item.children!}
+									onSelect={onSelect}
+									depth={depth + 1}
+								/>
+							</Collapse>
+						)}
+					</div>
+				);
+			})}
+		</>
+	);
+}
+
 function NavMenuList({ promise, onSelect }: NavMenuListProps) {
 	const items = use(promise);
 	return (
 		<List sx={{ width: 240 }}>
-			{items.map((item) => (
-				<ListItemButton
-					key={item.to}
-					component={Link}
-					to={item.to}
-					onClick={onSelect}
-				>
-					<NavItemIcon icon={item.icon} />
-					<ListItemText primary={item.label} />
-				</ListItemButton>
-			))}
+			<NavMenuItems items={items} onSelect={onSelect} />
 		</List>
 	);
 }
