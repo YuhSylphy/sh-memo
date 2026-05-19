@@ -1,5 +1,5 @@
 import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
-import { MainFrame } from '../feature/frame';
+import { MainFrame } from '../frame';
 
 export type RouteHandle = {
 	title?: string;
@@ -30,7 +30,7 @@ export const appRoutes: RouteObject[] = [
 						path: 'sample',
 						handle: { title: 'Sample' } satisfies RouteHandle,
 						lazy: async () => ({
-							Component: (await import('../pages/sample'))
+							Component: (await import('../../pages/sample'))
 								.default,
 						}),
 					},
