@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type MarkdownState = {
 	// TODO: state fields
 };
