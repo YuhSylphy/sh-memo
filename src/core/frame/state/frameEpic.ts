@@ -1,18 +1,8 @@
 import type { AppEpic } from '../../store';
-import {
-	distinctUntilChanged,
-	filter,
-	from,
-	map,
-	merge,
-	catchError,
-	of,
-	skip,
-	switchMap,
-} from 'rxjs';
-import { appActions } from '../../store';
+import { filter, from, map, merge, catchError, of, switchMap } from 'rxjs';
 import { fetchNavItems } from '../logic/navItems';
 import { frameActions } from './frameSlice';
+import { configActions } from '../../../feature/config';
 
 // Helper: wrap fetchNavItems() into the fetch → completed/failed action sequence.
 function fetchNavItemsActions$() {
@@ -22,25 +12,22 @@ function fetchNavItemsActions$() {
 	);
 }
 
-// Trigger 1: fetch on app initialized.
-const navItemsOnInitEpic: AppEpic = (action$) =>
+// Trigger 1: fetch after config is hydrated from storage (startup/reset).
+const navItemsOnConfigHydratedEpic: AppEpic = (action$) =>
 	action$.pipe(
-		filter(appActions.appInitialized.match),
+		filter(configActions.hydrateFromStorageCompleted.match),
 		switchMap(() => fetchNavItemsActions$()),
 	);
 
-// Trigger 2: re-fetch when DOCS_API_KEY changes in config state.
-// Observes state$ directly to avoid importing feature/config actions.
-const navItemsOnConfigChangeEpic: AppEpic = (_action$, state$) =>
-	state$.pipe(
-		map((state) => state.config.values.DOCS_API_KEY),
-		distinctUntilChanged(),
-		skip(1), // skip initial value; appInitialized handles the first fetch
+// Trigger 2: re-fetch after config is persisted (manual save).
+const navItemsOnConfigSavedEpic: AppEpic = (action$) =>
+	action$.pipe(
+		filter(configActions.saveToStorageCompleted.match),
 		switchMap(() => fetchNavItemsActions$()),
 	);
 
 export const frameEpic: AppEpic = (action$, state$, dependencies) =>
 	merge(
-		navItemsOnInitEpic(action$, state$, dependencies),
-		navItemsOnConfigChangeEpic(action$, state$, dependencies),
+		navItemsOnConfigHydratedEpic(action$, state$, dependencies),
+		navItemsOnConfigSavedEpic(action$, state$, dependencies),
 	);
