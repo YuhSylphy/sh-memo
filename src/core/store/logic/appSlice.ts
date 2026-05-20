@@ -1,11 +1,15 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+
+export const APP_LABEL_DEFAULT = 'app';
 
 type AppState = {
 	initialized: boolean;
+	label: string;
 };
 
 const initialState: AppState = {
 	initialized: false,
+	label: APP_LABEL_DEFAULT,
 };
 
 const appSlice = createSlice({
@@ -14,6 +18,9 @@ const appSlice = createSlice({
 	reducers: {
 		appInitialized: (state) => {
 			state.initialized = true;
+		},
+		appLabelSet: (state, action: PayloadAction<string>) => {
+			state.label = action.payload;
 		},
 	},
 });

@@ -118,12 +118,103 @@ function NavMenuList({ items, onSelect }: NavMenuListProps) {
 	);
 }
 
-export function MainFrame({ children }: PropsWithChildren) {
+type MainFrameHeaderProps = {
+	onToggleMenu: () => void;
+	label: string;
+};
+
+/**
+ * メインフレーム上部のアプリバー。
+ */
+function MainFrameHeader({ onToggleMenu, label }: MainFrameHeaderProps) {
+	return (
+		<AppBar position="static">
+			<Toolbar>
+				<IconButton
+					color="inherit"
+					edge="start"
+					aria-label="menu"
+					sx={{ mr: 2 }}
+					onClick={onToggleMenu}
+				>
+					<MenuIcon />
+				</IconButton>
+				<Typography variant="h6" component="div">
+					{label}
+				</Typography>
+			</Toolbar>
+		</AppBar>
+	);
+}
+
+type MainFrameDrawerProps = {
+	open: boolean;
+	onClose: () => void;
+	items: NavItem[];
+	status: 'idle' | 'loading' | 'loaded' | 'error';
+	onSelectItem: () => void;
+};
+
+/**
+ * メインフレームの左ドロワー。
+ */
+function MainFrameDrawer({
+	open,
+	onClose,
+	items,
+	status,
+	onSelectItem,
+}: MainFrameDrawerProps) {
+	return (
+		<Drawer open={open} onClose={onClose}>
+			<Typography
+				variant="subtitle1"
+				sx={{ px: 2, py: 1.5, fontWeight: 'bold' }}
+			>
+				Menu
+			</Typography>
+			{status === 'loading' || status === 'idle' ? (
+				<CircularProgress sx={{ m: 2 }} size={24} />
+			) : (
+				<NavMenuList items={items} onSelect={onSelectItem} />
+			)}
+		</Drawer>
+	);
+}
+
+/**
+ * MainFrame が利用する状態とイベントハンドラをまとめる。
+ */
+function useMainFrameHooks() {
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const navItems = useAppSelector((state) => state.frame.navItems);
 	const navItemsStatus = useAppSelector(
 		(state) => state.frame.navItemsStatus,
 	);
+	const appLabel = useAppSelector((state) => state.app.label);
+
+	const toggleDrawer = () => setDrawerOpen((prev) => !prev);
+	const closeDrawer = () => setDrawerOpen(false);
+
+	return {
+		drawerOpen,
+		navItems,
+		navItemsStatus,
+		appLabel,
+		toggleDrawer,
+		closeDrawer,
+	};
+}
+
+export function MainFrame({ children }: PropsWithChildren) {
+	const {
+		drawerOpen,
+		navItems,
+		navItemsStatus,
+		appLabel,
+		toggleDrawer,
+		closeDrawer,
+	} = useMainFrameHooks();
 
 	return (
 		<Box
@@ -133,39 +224,15 @@ export function MainFrame({ children }: PropsWithChildren) {
 				minHeight: '100vh',
 			}}
 		>
-			<AppBar position="static">
-				<Toolbar>
-					<IconButton
-						color="inherit"
-						edge="start"
-						aria-label="menu"
-						sx={{ mr: 2 }}
-						onClick={() => setDrawerOpen((prev) => !prev)}
-					>
-						<MenuIcon />
-					</IconButton>
-					<Typography variant="h6" component="div">
-						app
-					</Typography>
-				</Toolbar>
-			</AppBar>
+			<MainFrameHeader onToggleMenu={toggleDrawer} label={appLabel} />
 
-			<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-				<Typography
-					variant="subtitle1"
-					sx={{ px: 2, py: 1.5, fontWeight: 'bold' }}
-				>
-					Menu
-				</Typography>
-				{navItemsStatus === 'loading' || navItemsStatus === 'idle' ? (
-					<CircularProgress sx={{ m: 2 }} size={24} />
-				) : (
-					<NavMenuList
-						items={navItems}
-						onSelect={() => setDrawerOpen(false)}
-					/>
-				)}
-			</Drawer>
+			<MainFrameDrawer
+				open={drawerOpen}
+				onClose={closeDrawer}
+				items={navItems}
+				status={navItemsStatus}
+				onSelectItem={closeDrawer}
+			/>
 
 			<Container component="main" sx={{ flex: 1, py: 3 }}>
 				{children}
