@@ -1,1 +1,7 @@
-export { fetchRepositoryFileContent } from './logic/fetchRepositoryFileContent';
+export {
+	fetchRepositoryFile,
+	fetchRepositoryFileContent,
+	updateRepositoryFileContent,
+	type RepositoryFile,
+	type RepositoryFileUpdateResult,
+} from './logic/fetchRepositoryFileContent';

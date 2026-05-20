@@ -84,7 +84,7 @@ function mergeDynamicMenuItems(
  * リポジトリの menu.yaml を取得・パースし、DynamicMenuDef[] として返す。
  * 取得失敗・パース失敗・TypeGuard 検証失敗時は警告を出力して空配列を返す。
  */
-async function fetchDynamicMenuDefs(): Promise<DynamicMenuDef[]> {
+export async function fetchDynamicMenuDefs(): Promise<DynamicMenuDef[]> {
 	try {
 		const menuYaml = await fetchRepositoryFileContent('sh-memo/menu.yaml');
 		const menuObject = loadYaml(menuYaml);
