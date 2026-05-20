@@ -81,22 +81,30 @@ function mergeDynamicMenuItems(
 }
 
 /**
- * リポジトリの menu.yaml を取得・パースし、RepositoryMenuItem[] として返す。
- * TypeGuard による検証に失敗した場合は警告を出力して空配列を返す。
+ * リポジトリの menu.yaml を取得・パースし、DynamicMenuDef[] として返す。
+ * 取得失敗・パース失敗・TypeGuard 検証失敗時は警告を出力して空配列を返す。
  */
 async function fetchDynamicMenuDefs(): Promise<DynamicMenuDef[]> {
-	const menuYaml = await fetchRepositoryFileContent('sh-memo/menu.yaml');
-	const menuObject = loadYaml(menuYaml);
+	try {
+		const menuYaml = await fetchRepositoryFileContent('sh-memo/menu.yaml');
+		const menuObject = loadYaml(menuYaml);
 
-	if (!isDynamicMenuDefTree(menuObject)) {
+		if (!isDynamicMenuDefTree(menuObject)) {
+			console.warn(
+				'[fetchDynamicMenuDefs] invalid menu schema:',
+				menuObject,
+			);
+			return [];
+		}
+
+		return menuObject;
+	} catch (error) {
 		console.warn(
-			'[fetchRepositoryMenuItems] invalid menu schema:',
-			menuObject,
+			'[fetchDynamicMenuDefs] failed to load dynamic menu. fallback to static menu only.',
+			error,
 		);
 		return [];
 	}
-
-	return menuObject;
 }
 
 /**
