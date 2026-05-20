@@ -5,6 +5,7 @@ import {
 	useMatches,
 } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import { type RouteHandle, appRoutes } from '../logic/config';
 import { APP_LABEL_DEFAULT, appActions, useAppDispatch } from '../../store';
@@ -40,8 +41,28 @@ function RootLayout() {
 	);
 }
 
+function RouteHydrateFallback() {
+	return (
+		<Box
+			sx={{
+				display: 'grid',
+				placeItems: 'center',
+				minHeight: '100vh',
+			}}
+		>
+			<CircularProgress size={28} />
+		</Box>
+	);
+}
+
 const appRouter = createBrowserRouter(
-	[{ Component: RootLayout, children: appRoutes }],
+	[
+		{
+			Component: RootLayout,
+			HydrateFallback: RouteHydrateFallback,
+			children: appRoutes,
+		},
+	],
 	{ basename: import.meta.env.BASE_URL },
 );
 
