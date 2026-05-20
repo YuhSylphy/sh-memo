@@ -8,7 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-coverage
+/.env
+reports
 dist
 dist-ssr
 storybook-static
@@ -26,3 +27,10 @@ storybook-static
 *.sw?
 
 /.work
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.work

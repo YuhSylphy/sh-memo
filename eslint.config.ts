@@ -7,7 +7,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-	globalIgnores(['coverage', 'dist', 'storybook-static']),
+	globalIgnores(['reports', 'dist', 'storybook-static']),
 	{
 		files: ['**/*.{ts,tsx}'],
 		extends: [
@@ -21,6 +21,11 @@ export default defineConfig([
 				rules: {
 					semi: ['error', 'always'],
 					'react/react-in-jsx-scope': 'off',
+					'no-unused-vars': 'off',
+					'@typescript-eslint/no-unused-vars': [
+						'warn',
+						{ argsIgnorePattern: '^_' },
+					],
 				},
 			},
 		],
