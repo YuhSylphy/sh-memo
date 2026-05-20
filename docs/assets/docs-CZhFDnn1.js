@@ -1,0 +1,1 @@
+import{i as e,ln as t,o as n,r,t as i}from"./index-BpJKNQBK.js";var a=t();function o(e){return r(n(t=>e?t.markdown.documentIndexById[e]?.title??``:``)),{documentId:e}}function s(){let{documentId:t}=e(),{documentId:n}=o(t??``);return(0,a.jsx)(i,{documentId:n})}var c=s;export{c as default};
