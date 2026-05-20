@@ -15,7 +15,7 @@ import {
 	type GridValidRowModel,
 } from '@mui/x-data-grid';
 import { useMemo } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../core/store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../core/store';
 import { counterActions } from '../index';
 
 type CounterGridRow = GridValidRowModel & {
