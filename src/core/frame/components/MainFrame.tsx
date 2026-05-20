@@ -17,13 +17,14 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import { Suspense, use, useState } from 'react';
+import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import { Link } from 'react-router-dom';
-import { type NavItem, fetchNavItems } from '../logic/navItems';
+import { useAppSelector } from '../../store';
+import { type NavItem } from '../logic/navItems';
 
 type NavMenuListProps = {
-	promise: Promise<NavItem[]>;
+	items: NavItem[];
 	onSelect: () => void;
 };
 
@@ -109,8 +110,7 @@ function NavMenuItems({ items, onSelect, depth = 0 }: NavMenuItemsProps) {
 	);
 }
 
-function NavMenuList({ promise, onSelect }: NavMenuListProps) {
-	const items = use(promise);
+function NavMenuList({ items, onSelect }: NavMenuListProps) {
 	return (
 		<List sx={{ width: 240 }}>
 			<NavMenuItems items={items} onSelect={onSelect} />
@@ -120,7 +120,10 @@ function NavMenuList({ promise, onSelect }: NavMenuListProps) {
 
 export function MainFrame({ children }: PropsWithChildren) {
 	const [drawerOpen, setDrawerOpen] = useState(false);
-	const [navItemsPromise] = useState(() => fetchNavItems());
+	const navItems = useAppSelector((state) => state.frame.navItems);
+	const navItemsStatus = useAppSelector(
+		(state) => state.frame.navItemsStatus,
+	);
 
 	return (
 		<Box
@@ -154,14 +157,14 @@ export function MainFrame({ children }: PropsWithChildren) {
 				>
 					Menu
 				</Typography>
-				<Suspense
-					fallback={<CircularProgress sx={{ m: 2 }} size={24} />}
-				>
+				{navItemsStatus === 'loading' || navItemsStatus === 'idle' ? (
+					<CircularProgress sx={{ m: 2 }} size={24} />
+				) : (
 					<NavMenuList
-						promise={navItemsPromise}
+						items={navItems}
 						onSelect={() => setDrawerOpen(false)}
 					/>
-				</Suspense>
+				)}
 			</Drawer>
 
 			<Container component="main" sx={{ flex: 1, py: 3 }}>

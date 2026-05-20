@@ -1,9 +1,7 @@
-// synchronous exports
-// export {
-// 	fooActions,
-// 	fooReducer,
-// 	type FooState,
-// } from './state/fooSlice';
+export {
+	frameActions,
+	frameReducer,
+	type FrameState,
+} from './state/frameSlice';
 
-// all modules in this directory will be loaded synchronously
-export * from './lazy';
+export { MainFrame } from './components/MainFrame';
