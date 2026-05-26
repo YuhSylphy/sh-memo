@@ -43,4 +43,14 @@ declare module 'mdast' {
 		ruby: Ruby;
 		styledBlock: StyledBlock;
 	}
+
+	interface BlockContentMap {
+		noteAside: NoteAside;
+		styledBlock: StyledBlock;
+	}
+
+	interface PhrasingContentMap {
+		ruby: Ruby;
+		styledBlock: StyledBlock;
+	}
 }

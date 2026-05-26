@@ -186,6 +186,11 @@ function convertToMdast(markdown: string) {
 type PANE = 'LEFT' | 'RIGHT' | 'DOUBLE';
 
 type RenderMeta = [React.ReactNode, number, PANE];
+function renderChild(child: Nodes): React.ReactNode[] {
+	return renderNodeWithMeta(child).map(
+		([content, _gridRow, _pane]) => content,
+	);
+}
 function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 	const rows: RenderMeta[] = (() => {
 		switch (node.type) {
@@ -204,9 +209,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 							<React.Fragment
 								key={`paragraph-child-${node.position?.start?.offset}-${i}`}
 							>
-								{renderNodeWithMeta(child).map(
-									([content, _gridRow, _pane]) => content,
-								)}
+								{renderChild(child)}
 							</React.Fragment>
 						))}
 					</Typography>
@@ -226,9 +229,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 							<React.Fragment
 								key={`heading-child-${node.position?.start?.offset}-${i}`}
 							>
-								{renderNodeWithMeta(child).map(
-									([content, _gridRow, _pane]) => content,
-								)}
+								{renderChild(child)}
 							</React.Fragment>
 						))}
 					</Typography>
@@ -246,9 +247,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 								<React.Fragment
 									key={`note-aside-child-${node.position?.start?.offset}-${i}`}
 								>
-									{renderNodeWithMeta(child).map(
-										([content, _gridRow, _pane]) => content,
-									)}
+									{renderChild(child)}
 								</React.Fragment>
 							))}
 					</React.Fragment>
@@ -263,7 +262,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 						<React.Fragment>
 							{node.children?.map((child, i) => (
 								<React.Fragment key={`ruby-text-${start}-${i}`}>
-									{renderNode(child)}
+									{renderChild(child)}
 								</React.Fragment>
 							))}
 						</React.Fragment>
@@ -287,7 +286,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 								<React.Fragment
 									key={`styled-block-child-${node.position?.start?.offset}-${i}`}
 								>
-									{renderNode(child)}
+									{renderChild(child)}
 								</React.Fragment>
 							))}
 					</Typography>
@@ -321,7 +320,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 							<React.Fragment
 								key={`link-child-${node.position?.start?.offset}-${i}`}
 							>
-								{renderNode(child)}
+								{renderChild(child)}
 							</React.Fragment>
 						))}
 					</Link>
@@ -376,7 +375,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 								<React.Fragment
 									key={`unknown-child-${node.position?.start?.offset}-${i}`}
 								>
-									{renderNode(child)}
+									{renderChild(child)}
 								</React.Fragment>
 							))}
 					</React.Fragment>
@@ -398,6 +397,22 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 	return rows;
 }
 
+function paneToGridColumn(pane: PANE): string {
+	switch (pane) {
+		case 'LEFT':
+			return '1';
+		case 'RIGHT':
+			return '2';
+		case 'DOUBLE':
+			return '1 / span 2';
+		default: {
+			const _exhaustive: never = pane;
+			console.warn('Unknown pane type:', _exhaustive);
+			return '1';
+		}
+	}
+}
+
 function renderNode(node: Nodes): React.ReactNode {
 	const rows = renderNodeWithMeta(node);
 	// paneで振り分ける必要あり
@@ -405,8 +420,22 @@ function renderNode(node: Nodes): React.ReactNode {
 		<React.Fragment>
 			{rows
 				.reduce<[React.ReactNode[], number]>(
-					([acc, gridRowIndex], [content, _gridRow, _pane], _ix) => {
-						return [[...acc, content], gridRowIndex + 1];
+					([acc, gridRowIndex], [content, gridRow, pane], _ix) => {
+						return [
+							[
+								...acc,
+								<Box
+									key={`box-${gridRowIndex}`}
+									sx={{
+										gridRow,
+										gridColumn: paneToGridColumn(pane),
+									}}
+								>
+									{content}
+								</Box>,
+							],
+							gridRowIndex + 1,
+						];
 					},
 					[[], 1] as const,
 				)[0]
@@ -423,7 +452,31 @@ function MdastRenderer({
 	ast: ReturnType<typeof convertToMdast>['ast'];
 }) {
 	return (
-		<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+		<Box
+			sx={{
+				display: 'grid',
+				gridTemplateColumns: '3fr 1fr',
+				'& h1': {
+					fontSize: '2.5rem',
+				},
+				'& h2': {
+					fontSize: '2rem',
+				},
+				'& h3': {
+					fontSize: '1.75rem',
+				},
+				'& h4': {
+					fontSize: '1.5rem',
+				},
+				'& h5': {
+					fontSize: '1.375rem',
+				},
+				'& h6': {
+					fontSize: '1.25rem',
+				},
+
+			}}
+		>
 			{renderNode(ast)}
 		</Box>
 	);
