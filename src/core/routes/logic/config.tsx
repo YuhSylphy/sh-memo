@@ -1,4 +1,4 @@
-import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 import { FramedLayout } from '../components/FramedLayout';
 import { buildRoutes } from './buildRoutes';
 import { appNavItems, rootRedirectTo } from '../../defs/appNavItems';
@@ -23,10 +23,7 @@ export const appRoutes: RouteObject[] = [
 			},
 
 			// MainFrame なし
-			{
-				Component: Outlet,
-				children: unframed,
-			},
+			...unframed,
 		],
 	},
 ];

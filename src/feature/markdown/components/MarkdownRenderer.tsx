@@ -1,18 +1,18 @@
-import { useEffect } from 'react';
 import {
 	Alert,
 	Box,
 	Button,
 	ButtonGroup,
 	CircularProgress,
+	Paper,
 	Stack,
-	TextField,
 	Typography,
 } from '@mui/material';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { markdownActions } from '../state/markdownSlice';
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../core/store';
+import { markdownActions } from '../state/markdownSlice';
+import { MarkdownEditorPane } from './MarkdownEditorPane';
+import { MarkdownViewerPane } from './MarkdownViewerPane';
 
 type Props = {
 	/** ルートパラメータの documentId。 */
@@ -72,6 +72,7 @@ export function MarkdownRenderer({ documentId }: Props) {
 
 	const isLoading = state.status === 'loading';
 	const isSaving = state.status === 'saving';
+	const isEditMode = state.viewMode === 'edit';
 
 	return (
 		<Stack spacing={2}>
@@ -84,16 +85,10 @@ export function MarkdownRenderer({ documentId }: Props) {
 					{state.activeDocumentTitle || indexItem.title}
 				</Typography>
 				<ButtonGroup variant="outlined" size="small">
-					<Button
-						onClick={openPreview}
-						disabled={state.viewMode === 'preview'}
-					>
+					<Button onClick={openPreview} disabled={!isEditMode}>
 						Preview
 					</Button>
-					<Button
-						onClick={openEdit}
-						disabled={state.viewMode === 'edit'}
-					>
+					<Button onClick={openEdit} disabled={isEditMode}>
 						Edit
 					</Button>
 				</ButtonGroup>
@@ -113,32 +108,20 @@ export function MarkdownRenderer({ documentId }: Props) {
 				>
 					<CircularProgress size={24} />
 				</Box>
-			) : state.viewMode === 'preview' ? (
-				<Box sx={{ '& p': { lineHeight: 1.8 } }}>
-					<ReactMarkdown remarkPlugins={[remarkGfm]}>
-						{state.draftContent}
-					</ReactMarkdown>
-				</Box>
 			) : (
-				<Stack spacing={1.5}>
-					<TextField
-						multiline
-						minRows={18}
-						maxRows={36}
-						value={state.draftContent}
-						onChange={(event) => updateDraft(event.target.value)}
-						fullWidth
+				<Paper sx={{ padding: 2 }}>
+					<MarkdownViewerPane
+						visible={!isEditMode}
+						markdown={state.draftContent}
 					/>
-					<Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
-						<Button
-							variant="contained"
-							onClick={saveDraft}
-							disabled={isSaving}
-						>
-							{isSaving ? 'Saving...' : 'Save'}
-						</Button>
-					</Stack>
-				</Stack>
+					<MarkdownEditorPane
+						visible={isEditMode}
+						state={state}
+						updateDraft={updateDraft}
+						saveDraft={saveDraft}
+						isSaving={isSaving}
+					/>
+				</Paper>
 			)}
 		</Stack>
 	);

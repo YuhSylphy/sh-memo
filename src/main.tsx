@@ -6,6 +6,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
 import App from './App.tsx';
 import { store } from './core/store';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundaryFallback } from './core/common/component/ErrorBoundaryFallback.tsx';
 
 const theme = createTheme({
 	palette: {
@@ -35,15 +37,18 @@ const theme = createTheme({
 		},
 	},
 });
+
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
-		<ThemeProvider theme={theme}>
-			<CssBaseline />
-			<HelmetProvider>
-				<Provider store={store}>
-					<App />
-				</Provider>
-			</HelmetProvider>
-		</ThemeProvider>
+		<HelmetProvider>
+			<ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
+				<ThemeProvider theme={theme}>
+					<CssBaseline />
+					<Provider store={store}>
+						<App />
+					</Provider>
+				</ThemeProvider>
+			</ErrorBoundary>
+		</HelmetProvider>
 	</StrictMode>,
 );
