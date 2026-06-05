@@ -1,6 +1,15 @@
 import React from 'react';
 
-import { Box, Link, Tooltip, Typography } from '@mui/material';
+import {
+	Box,
+	Link,
+	List,
+	ListItem,
+	ListItemIcon,
+	ListItemText,
+	Tooltip,
+	Typography,
+} from '@mui/material';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import '../logic/remark/types';
@@ -341,6 +350,81 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 				);
 				return [[LinkContent, 0, 'LEFT']];
 			}
+
+			case 'list': {
+				const { children, ordered, position } = node;
+				// const { gridRow = 0 } = node.data ?? {};
+				const gridRow = 0;
+				const ListContent = (
+					<List
+						component={ordered ? 'ol' : 'ul'}
+						key={`list-${position?.start?.offset}`}
+						sx={{ pl: '1rem' }}
+					>
+						{children?.map((child, i) => (
+							<React.Fragment
+								key={`paragraph-child-${position?.start?.offset}-${i}`}
+							>
+								{renderChild(child)}
+							</React.Fragment>
+						))}
+					</List>
+				);
+				return [[ListContent, gridRow, 'LEFT']];
+			}
+			case 'listItem': {
+				const { children, position } = node;
+				console.info('listItem node:', node);
+				// TODO: set gridRow to AST
+				// const { gridRow = 0 } = node.data ?? {};
+				const gridRow = 0;
+				const [childLists, others] = (children ?? []).reduce<
+					[typeof children, typeof children]
+				>(
+					([childLists, others], child) => {
+						if (child.type === 'list') {
+							return [[...childLists, child], others];
+						} else {
+							return [childLists, [...others, child]];
+						}
+					},
+					[[], []],
+				);
+				const ListItemContent = (
+					<ListItem
+						key={`list-item-${position?.start?.offset}`}
+						dense={true}
+					>
+						<ListItemIcon>
+							{/* ul と ol を分ける必要あり */}
+							<Typography variant="body2">•</Typography>
+						</ListItemIcon>
+						<ListItemText>
+							{others?.map((child, i) => (
+								<React.Fragment
+									key={`list-item-child-${position?.start?.offset}-${i}`}
+								>
+									{renderChild(child)}
+								</React.Fragment>
+							))}
+						</ListItemText>
+					</ListItem>
+				);
+				const NestedLists = childLists.map((childList, i) => (
+					<React.Fragment
+						key={`list-item-nested-list-${childList.position?.start?.offset}-${i}`}
+					>
+						{renderChild(childList)}
+					</React.Fragment>
+				));
+				return [
+					[ListItemContent, gridRow, 'LEFT'],
+					...NestedLists.map(
+						(NestedList) =>
+							[NestedList, gridRow, 'LEFT'] as RenderMeta,
+					),
+				];
+			}
 			case 'yaml':
 			case 'inlineCode':
 			case 'code':
@@ -354,8 +438,6 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 			case 'leafDirective':
 			case 'containerDirective':
 			case 'blockquote':
-			case 'list':
-			case 'listItem':
 			case 'table':
 			case 'tableRow':
 			case 'tableCell':
@@ -474,7 +556,6 @@ function MdastRenderer({
 				'& h6': {
 					fontSize: '1.25rem',
 				},
-
 			}}
 		>
 			{renderNode(ast)}
