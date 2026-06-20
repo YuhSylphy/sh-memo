@@ -1,6 +1,5 @@
-import type { Nodes, Paragraph, Root, StyledBlock } from 'mdast';
+import type { Nodes, Root, StyledBlock } from 'mdast';
 import type { Plugin } from 'unified';
-import { visit } from 'unist-util-visit';
 import { flatMap } from './unistUtilFlatMap';
 
 const remarkStyledBlock: Plugin<[], Root> = () => (tree) => {

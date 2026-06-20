@@ -1,16 +1,24 @@
 import type { NoteAside, Root } from 'mdast';
 import type { Plugin } from 'unified';
-import { visit } from 'unist-util-visit';
+import { visit, SKIP } from 'unist-util-visit';
 
 const remarkNoteAside: Plugin<[], Root> = () => (tree) => {
 	let gridRowCounter = 1; // gridRowのカウンターを初期化
 	visit(tree, (node) => {
-		// paragraph か heading の時は gridRowCounter をインクリメント
-		if (node.type === 'paragraph' || node.type === 'heading') {
+		if (
+			node.type === 'paragraph' ||
+			node.type === 'heading' ||
+			node.type === 'blockquote' ||
+			node.type === 'list' ||
+			node.type === 'code' ||
+			node.type === 'table' ||
+			node.type === 'thematicBreak'
+		) {
 			node.data = {
 				...node.data,
-				gridRow: gridRowCounter++, // paragraph と heading のときはgridRowをカウントアップして設定
+				gridRow: gridRowCounter++, // ブロック要素は1行としてカウント
 			};
+			return SKIP;
 		}
 
 		if (
@@ -25,7 +33,6 @@ const remarkNoteAside: Plugin<[], Root> = () => (tree) => {
 			return;
 		}
 
-		console.info('Processing directive node:', node);
 		const targetNode = node as unknown as NoteAside;
 		targetNode.type = 'noteAside';
 		targetNode.data = {

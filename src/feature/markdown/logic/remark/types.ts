@@ -20,6 +20,30 @@ declare module 'mdast' {
 		gridRow: number;
 	}
 
+	export interface ListData extends Data {
+		gridRow: number;
+	}
+
+	export interface ListItemData extends Data {
+		gridRow: number;
+	}
+
+	export interface CodeData extends Data {
+		gridRow: number;
+	}
+
+	export interface BlockquoteData extends Data {
+		gridRow: number;
+	}
+
+	export interface TableData extends Data {
+		gridRow: number;
+	}
+
+	export interface ThematicBreakData extends Data {
+		gridRow: number;
+	}
+
 	/**
 	 * ルビ付きテキストノード
 	 */
