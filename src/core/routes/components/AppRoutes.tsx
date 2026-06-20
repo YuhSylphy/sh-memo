@@ -14,6 +14,8 @@ import {
 	useAppDispatch,
 	useAppSelector,
 } from '../../store';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundaryFallback } from '../../common/component/ErrorBoundaryFallback';
 
 const APP_NAME = APP_LABEL_DEFAULT;
 
@@ -51,7 +53,9 @@ function RootLayout() {
 	return (
 		<>
 			<RouteTitle />
-			<Outlet />
+			<ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
+				<Outlet />
+			</ErrorBoundary>
 		</>
 	);
 }
