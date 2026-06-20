@@ -1,17 +1,8 @@
 import React from 'react';
 
-import {
-	Box,
-	Divider,
-	Link,
-	List,
-	ListItem,
-	ListItemIcon,
-	ListItemText,
-	Tooltip,
-	Typography,
-} from '@mui/material';
+import { Box, Divider, Link, Tooltip, Typography } from '@mui/material';
 import { ErrorBoundary } from 'react-error-boundary';
+import { SortableMarkdownTable } from './SortableMarkdownTable';
 
 import '../logic/remark/types';
 
@@ -149,6 +140,31 @@ function isRootNode(node: unknown): node is Root {
 	return isMdastNode(node) && node.type === 'root';
 }
 
+function getNodeText(node: Nodes): string {
+	if (node.type === 'text' || node.type === 'yaml' || node.type === 'inlineCode' || node.type === 'code') {
+		return typeof node.value === 'string' ? node.value : '';
+	}
+	if ('children' in node && Array.isArray(node.children)) {
+		return node.children.map(getNodeText).join('');
+	}
+	return '';
+}
+
+function slugify(text: string): string {
+	return text
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/g, '-')
+		.replace(/[^-]/g, '')
+		.replace(/[^a-z0-9-]/g, '')
+		.replace(/^-+|-+$/g, '');
+}
+
+function getHeadingId(node: Extract<Nodes, { type: 'heading' }>): string {
+	return slugify(getNodeText(node));
+}
+
+
 function convertToMdast(markdown: string) {
 	// 1. 同期的に最小限のパースを行う / プラグインも適用してASTを生成
 	const ast = processor.runSync(processor.parse(markdown));
@@ -230,9 +246,12 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 				return [[node.value, 0, 'LEFT']];
 			case 'heading': {
 				const { gridRow = 0 } = node.data ?? {};
+				const headingId = getHeadingId(node);
 				const Heading = (
 					<Typography
+						component={`h${node.depth}`}
 						variant={`h${node.depth}`}
+						id={headingId}
 						key={`heading-${node.position?.start?.offset}`}
 					>
 						{node.children?.map((child, i) => (
@@ -318,12 +337,14 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 			}
 			case 'link': {
 				const { url, title } = node;
+				const isInternalAnchor = typeof url === 'string' && url.startsWith('#');
 				const LinkMain = () => (
 					<Link
 						href={url}
-						target="_blank"
-						rel="noopener noreferrer"
 						component="a"
+						{...(!isInternalAnchor
+							? { target: '_blank', rel: 'noopener noreferrer' }
+							: {})}
 						key={`link-${node.position?.start?.offset}`}
 					>
 						{node.children?.map((child, i) => (
@@ -351,81 +372,6 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 				);
 				return [[LinkContent, 0, 'LEFT']];
 			}
-
-			case 'list': {
-				const { children, ordered, position } = node;
-				// const { gridRow = 0 } = node.data ?? {};
-				const gridRow = 0;
-				const ListContent = (
-					<List
-						component={ordered ? 'ol' : 'ul'}
-						key={`list-${position?.start?.offset}`}
-						sx={{ pl: '1rem' }}
-					>
-						{children?.map((child, i) => (
-							<React.Fragment
-								key={`paragraph-child-${position?.start?.offset}-${i}`}
-							>
-								{renderChild(child)}
-							</React.Fragment>
-						))}
-					</List>
-				);
-				return [[ListContent, gridRow, 'LEFT']];
-			}
-			case 'listItem': {
-				const { children, position } = node;
-				console.info('listItem node:', node);
-				// TODO: set gridRow to AST
-				// const { gridRow = 0 } = node.data ?? {};
-				const gridRow = 0;
-				const [childLists, others] = (children ?? []).reduce<
-					[typeof children, typeof children]
-				>(
-					([childLists, others], child) => {
-						if (child.type === 'list') {
-							return [[...childLists, child], others];
-						} else {
-							return [childLists, [...others, child]];
-						}
-					},
-					[[], []],
-				);
-				const ListItemContent = (
-					<ListItem
-						key={`list-item-${position?.start?.offset}`}
-						dense={true}
-					>
-						<ListItemIcon>
-							{/* ul と ol を分ける必要あり */}
-							<Typography variant="body2">•</Typography>
-						</ListItemIcon>
-						<ListItemText>
-							{others?.map((child, i) => (
-								<React.Fragment
-									key={`list-item-child-${position?.start?.offset}-${i}`}
-								>
-									{renderChild(child)}
-								</React.Fragment>
-							))}
-						</ListItemText>
-					</ListItem>
-				);
-				const NestedLists = childLists.map((childList, i) => (
-					<React.Fragment
-						key={`list-item-nested-list-${childList.position?.start?.offset}-${i}`}
-					>
-						{renderChild(childList)}
-					</React.Fragment>
-				));
-				return [
-					[ListItemContent, gridRow, 'LEFT'],
-					...NestedLists.map(
-						(NestedList) =>
-							[NestedList, gridRow, 'LEFT'] as RenderMeta,
-					),
-				];
-			}
 			case 'thematicBreak': {
 				const { gridRow = 0 } = node.data ?? {};
 				const HR = (
@@ -436,26 +382,340 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 				);
 				return [[HR, gridRow, 'DOUBLE']];
 			}
-			case 'yaml':
-			case 'inlineCode':
-			case 'code':
-			case 'break':
-			case 'delete':
-			case 'emphasis':
-			case 'footnoteDefinition':
-			case 'strong':
+
+			case 'list': {
+				const { gridRow = 0 } = node.data ?? {};
+				const ListContent = (
+					<Box
+						component={node.ordered ? 'ol' : 'ul'}
+						key={`list-${node.position?.start?.offset}`}
+						sx={{
+							pl: 3,
+							mb: 2,
+							mt: 1,
+						}}
+					>
+						{node.children?.map((child, i) => (
+							<React.Fragment
+								key={`list-child-${node.position?.start?.offset}-${i}`}
+							>
+								{renderChild(child)}
+							</React.Fragment>
+						))}
+					</Box>
+				);
+				return [[ListContent, gridRow, 'LEFT']];
+			}
+			case 'listItem': {
+				const { gridRow = 0 } = node.data ?? {};
+				const nestedLists = (node.children ?? []).filter(
+					(child) => child.type === 'list',
+				);
+				const inlineChildren = (node.children ?? []).filter(
+					(child) => child.type !== 'list',
+				);
+				const ListItemContent = (
+					<Box
+						component="li"
+						key={`list-item-${node.position?.start?.offset}`}
+						sx={{
+							mb: 0.75,
+							lineHeight: 1.5,
+							'& > ol, & > ul': {
+								pl: 3,
+								mb: 0,
+							},
+						}}>
+						{inlineChildren.map((child, i) => (
+							<React.Fragment
+								key={`list-item-child-${node.position?.start?.offset}-${i}`}
+							>
+								{renderChild(child)}
+							</React.Fragment>
+						))}
+						{nestedLists.map((nested, i) => (
+							<React.Fragment
+								key={`list-item-nested-list-${nested.position?.start?.offset}-${i}`}
+							>
+								{renderChild(nested)}
+							</React.Fragment>
+						))}
+					</Box>
+				);
+				return [[ListItemContent, gridRow, 'LEFT']];
+			}
+
+			case 'yaml': {
+				return [];
+			}
+			case 'inlineCode': {
+				return [
+					[
+						<Box
+							component="code"
+							key={`inlineCode-${node.position?.start?.offset}`}
+							sx={{
+								fontFamily: 'Monospace',
+								backgroundColor: 'rgba(0,0,0,0.06)',
+								px: '0.25rem',
+								borderRadius: '0.25rem',
+							}}
+						>
+							{node.value}
+						</Box>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'code': {
+				const { gridRow = 0 } = node.data ?? {};
+				return [
+					[
+						<Box
+							component="pre"
+							key={`code-${node.position?.start?.offset}`}
+							sx={{
+								p: 2,
+								backgroundColor: 'rgba(0,0,0,0.04)',
+								borderRadius: 1,
+								overflowX: 'auto',
+								whiteSpace: 'pre-wrap',
+							}}
+						>
+							<Box component="code">{node.value}</Box>
+						</Box>,
+						gridRow,
+						'LEFT',
+					],
+				];
+			}
+			case 'break': {
+				return [
+					[
+						<br key={`break-${node.position?.start?.offset}`} />,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'delete': {
+				return [
+					[
+						<del key={`delete-${node.position?.start?.offset}`}>
+							{node.children?.map((child, i) => (
+								<React.Fragment
+									key={`delete-child-${node.position?.start?.offset}-${i}`}
+								>
+									{renderChild(child)}
+								</React.Fragment>
+							))}
+						</del>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'emphasis': {
+				return [
+					[
+						<em key={`emphasis-${node.position?.start?.offset}`}>
+							{node.children?.map((child, i) => (
+								<React.Fragment
+									key={`emphasis-child-${node.position?.start?.offset}-${i}`}
+								>
+									{renderChild(child)}
+								</React.Fragment>
+							))}
+						</em>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'footnoteDefinition': {
+				return [];
+			}
+			case 'strong': {
+				return [
+					[
+						<strong key={`strong-${node.position?.start?.offset}`}>
+							{node.children?.map((child, i) => (
+								<React.Fragment
+									key={`strong-child-${node.position?.start?.offset}-${i}`}
+								>
+									{renderChild(child)}
+								</React.Fragment>
+							))}
+						</strong>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'blockquote': {
+				const { gridRow = 0 } = node.data ?? {};
+				const Quote = (
+					<Box
+						component="blockquote"
+						key={`blockquote-${node.position?.start?.offset}`}
+						sx={{
+							pl: '1rem',
+							borderLeft: '4px solid',
+							borderColor: 'divider',
+							color: 'text.secondary',
+							m: 0,
+						}}
+					>
+						{node.children?.map((child, i) => (
+							<React.Fragment
+								key={`blockquote-child-${node.position?.start?.offset}-${i}`}
+							>
+								{renderChild(child)}
+							</React.Fragment>
+						))}
+					</Box>
+				);
+				return [[Quote, gridRow, 'LEFT']];
+			}
+			case 'table': {
+				const { gridRow = 0 } = node.data ?? {};
+				return [[
+					<SortableMarkdownTable
+						key={`sortable-table-${node.position?.start?.offset}`}
+						table={node}
+						renderChild={renderChild}
+					/>,
+					gridRow,
+					'LEFT',
+				]];
+			}
+			case 'tableRow': {
+				const RowContent = (
+					<Box
+						component="tr"
+						key={`tableRow-${node.position?.start?.offset}`}
+					>
+						{node.children?.map((child, i) => (
+							<React.Fragment
+								key={`tableCell-wrapper-${node.position?.start?.offset}-${i}`}
+							>
+								{renderChild(child)}
+							</React.Fragment>
+						))}
+					</Box>
+				);
+				return [[RowContent, 0, 'LEFT']];
+			}
+			case 'tableCell': {
+				const align =
+					(node as { align?: 'left' | 'center' | 'right' | null })
+						.align ?? 'left';
+				const isHeader =
+					(node as { isHeader?: boolean }).isHeader === true;
+				const CellContent = (
+					<Box
+						component={isHeader ? 'th' : 'td'}
+						key={`tableCell-${node.position?.start?.offset}`}
+						sx={{
+							border: '1px solid',
+							borderColor: 'divider',
+							p: 1,
+							textAlign: align,
+						}}
+					>
+						{node.children?.map((child, i) => (
+							<React.Fragment
+								key={`tableCell-child-${node.position?.start?.offset}-${i}`}
+							>
+								{renderChild(child)}
+							</React.Fragment>
+						))}
+					</Box>
+				);
+				return [[CellContent, 0, 'LEFT']];
+			}
+			case 'definition': {
+				return [];
+			}
+			case 'footnoteReference': {
+				return [
+					[
+						<Box
+							component="sup"
+							key={`footnoteReference-${node.position?.start?.offset}`}
+							sx={{ fontSize: '0.75rem' }}
+						>
+							{node.identifier || node.label || 'fn'}
+						</Box>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'image': {
+				return [
+					[
+						<Box
+							component="img"
+							src={node.url}
+							alt={node.alt ?? ''}
+							title={node.title ?? undefined}
+							key={`image-${node.position?.start?.offset}`}
+							sx={{
+								maxWidth: '100%',
+								height: 'auto',
+								display: 'block',
+							}}
+						/>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'imageReference': {
+				return [
+					[
+						<Box
+							component="span"
+							key={`imageReference-${node.position?.start?.offset}`}
+							sx={{ fontStyle: 'italic' }}
+						>
+							{node.alt ?? `[image:${node.identifier}]`}
+						</Box>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+			case 'linkReference': {
+				return [
+					[
+						<Link
+							component="span"
+							key={`linkReference-${node.position?.start?.offset}`}
+							sx={{
+								textDecoration: 'underline',
+								cursor: 'pointer',
+							}}
+						>
+							{node.children?.map((child, i) => (
+								<React.Fragment
+									key={`linkReference-child-${node.position?.start?.offset}-${i}`}
+								>
+									{renderChild(child)}
+								</React.Fragment>
+							))}
+						</Link>,
+						0,
+						'LEFT',
+					],
+				];
+			}
+
 			case 'textDirective':
 			case 'leafDirective':
-			case 'containerDirective':
-			case 'blockquote':
-			case 'table':
-			case 'tableRow':
-			case 'tableCell':
-			case 'definition':
-			case 'footnoteReference':
-			case 'image':
-			case 'imageReference':
-			case 'linkReference': {
+			case 'containerDirective': {
 				console.warn('Unsupported node type:', node.type, node);
 				const UnknownContent = (
 					<React.Fragment
