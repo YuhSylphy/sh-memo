@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Box, Divider, Link, Tooltip, Typography } from '@mui/material';
 import { ErrorBoundary } from 'react-error-boundary';
+import { ShikiCodeBlock } from './ShikiCodeBlock';
 import { SortableMarkdownTable } from './SortableMarkdownTable';
 
 import '../logic/remark/types';
@@ -141,7 +142,12 @@ function isRootNode(node: unknown): node is Root {
 }
 
 function getNodeText(node: Nodes): string {
-	if (node.type === 'text' || node.type === 'yaml' || node.type === 'inlineCode' || node.type === 'code') {
+	if (
+		node.type === 'text' ||
+		node.type === 'yaml' ||
+		node.type === 'inlineCode' ||
+		node.type === 'code'
+	) {
 		return typeof node.value === 'string' ? node.value : '';
 	}
 	if ('children' in node && Array.isArray(node.children)) {
@@ -163,7 +169,6 @@ function slugify(text: string): string {
 function getHeadingId(node: Extract<Nodes, { type: 'heading' }>): string {
 	return slugify(getNodeText(node));
 }
-
 
 function convertToMdast(markdown: string) {
 	// 1. 同期的に最小限のパースを行う / プラグインも適用してASTを生成
@@ -337,7 +342,8 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 			}
 			case 'link': {
 				const { url, title } = node;
-				const isInternalAnchor = typeof url === 'string' && url.startsWith('#');
+				const isInternalAnchor =
+					typeof url === 'string' && url.startsWith('#');
 				const LinkMain = () => (
 					<Link
 						href={url}
@@ -425,7 +431,8 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 								pl: 3,
 								mb: 0,
 							},
-						}}>
+						}}
+					>
 						{inlineChildren.map((child, i) => (
 							<React.Fragment
 								key={`list-item-child-${node.position?.start?.offset}-${i}`}
@@ -468,28 +475,23 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 					],
 				];
 			}
+
 			case 'code': {
 				const { gridRow = 0 } = node.data ?? {};
+				console.info(`code block: ${node?.lang}`);
 				return [
 					[
-						<Box
-							component="pre"
+						<ShikiCodeBlock
 							key={`code-${node.position?.start?.offset}`}
-							sx={{
-								p: 2,
-								backgroundColor: 'rgba(0,0,0,0.04)',
-								borderRadius: 1,
-								overflowX: 'auto',
-								whiteSpace: 'pre-wrap',
-							}}
-						>
-							<Box component="code">{node.value}</Box>
-						</Box>,
+							code={node.value}
+							lang={node.lang}
+						/>,
 						gridRow,
 						'LEFT',
 					],
 				];
 			}
+
 			case 'break': {
 				return [
 					[
@@ -580,15 +582,17 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 			}
 			case 'table': {
 				const { gridRow = 0 } = node.data ?? {};
-				return [[
-					<SortableMarkdownTable
-						key={`sortable-table-${node.position?.start?.offset}`}
-						table={node}
-						renderChild={renderChild}
-					/>,
-					gridRow,
-					'LEFT',
-				]];
+				return [
+					[
+						<SortableMarkdownTable
+							key={`sortable-table-${node.position?.start?.offset}`}
+							table={node}
+							renderChild={renderChild}
+						/>,
+						gridRow,
+						'LEFT',
+					],
+				];
 			}
 			case 'tableRow': {
 				const RowContent = (
