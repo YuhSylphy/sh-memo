@@ -20,6 +20,10 @@ declare module 'mdast' {
 		gridRow: number;
 	}
 
+	export interface ThematicBreakData extends Data {
+		gridRow: number;
+	}
+
 	/**
 	 * ルビ付きテキストノード
 	 */

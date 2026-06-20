@@ -2,6 +2,7 @@ import React from 'react';
 
 import {
 	Box,
+	Divider,
 	Link,
 	List,
 	ListItem,
@@ -425,11 +426,20 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 					),
 				];
 			}
+			case 'thematicBreak': {
+				const { gridRow = 0 } = node.data ?? {};
+				const HR = (
+					<Divider
+						key={`thematicBreak-${node.position?.start?.offset}`}
+						sx={{ my: 2 }}
+					/>
+				);
+				return [[HR, gridRow, 'DOUBLE']];
+			}
 			case 'yaml':
 			case 'inlineCode':
 			case 'code':
 			case 'break':
-			case 'thematicBreak':
 			case 'delete':
 			case 'emphasis':
 			case 'footnoteDefinition':
