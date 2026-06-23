@@ -328,6 +328,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 				return [[StyledBlockContent, 0, 'LEFT']];
 			}
 			case 'html': {
+				const { gridRow = 0 } = node.data ?? {};
 				// HTMLとしてはレンダリングせずテキストとして表示
 				const HtmlContent = (
 					<Typography
@@ -338,7 +339,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 						{node.value}
 					</Typography>
 				);
-				return [[HtmlContent, 0, 'LEFT']];
+				return [[HtmlContent, gridRow, 'LEFT']];
 			}
 			case 'link': {
 				const { url, title } = node;
