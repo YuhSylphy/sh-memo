@@ -19,7 +19,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../store';
 import { type NavItem } from '../logic/navItems';
 
@@ -56,8 +56,31 @@ type NavMenuItemsProps = {
 	depth?: number;
 };
 
+function hasMatchingDescendant(item: NavItem, pathname: string): boolean {
+	if (
+		item.to !== undefined &&
+		(pathname === item.to || pathname.startsWith(item.to + '/'))
+	) {
+		return true;
+	}
+	return (
+		item.children?.some((child) =>
+			hasMatchingDescendant(child, pathname),
+		) ?? false
+	);
+}
+
 function NavMenuItems({ items, onSelect, depth = 0 }: NavMenuItemsProps) {
-	const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set());
+	const { pathname } = useLocation();
+	const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
+		const initial = new Set<string>();
+		for (const item of items) {
+			if (item.children && hasMatchingDescendant(item, pathname)) {
+				initial.add(item.label);
+			}
+		}
+		return initial;
+	});
 
 	const toggleOpen = (label: string) => {
 		setOpenKeys((prev) => {
