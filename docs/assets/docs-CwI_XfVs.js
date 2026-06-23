@@ -1,0 +1,1 @@
+import{fn as e,i as t,o as n,r,t as i}from"./index-BchYsxKH.js";var a=e();function o(e){return r(n(t=>e?t.markdown.documentIndexById[e]?.title??``:``)),{documentId:e}}function s(){let{documentId:e}=t(),{documentId:n}=o(e??``);return(0,a.jsx)(i,{documentId:n})}var c=s;export{c as default};
