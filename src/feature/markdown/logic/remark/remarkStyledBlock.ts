@@ -60,8 +60,12 @@ const remarkStyledBlock: Plugin<[], Root> = () => (tree) => {
 						return [[...acc, ...insertion, parent], []];
 					}
 					case 'styledBlock': {
-						// styledBlockが入れ子になっている場合は、内側のblockのみに単純化する
-						return [[...acc, child], tmp];
+						// tmpに溜まっているノードがあればstyledBlockで括る（順序を保つ）
+						const insertion =
+							tmp.length > 0 ? [createStyledBlock(tmp)] : [];
+						// 内側のstyledBlockを外側のstyleで包んでスタイル文脈を保つ
+						const wrapped = createStyledBlock([child]);
+						return [[...acc, ...insertion, wrapped], []];
 					}
 					default: {
 						return [acc, [...tmp, child]];

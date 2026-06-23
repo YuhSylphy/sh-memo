@@ -44,6 +44,10 @@ declare module 'mdast' {
 		gridRow: number;
 	}
 
+	export interface HtmlData extends Data {
+		gridRow: number;
+	}
+
 	/**
 	 * ルビ付きテキストノード
 	 */
