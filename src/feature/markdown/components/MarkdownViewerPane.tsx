@@ -313,6 +313,7 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 					<Typography
 						className={styleName}
 						component="span"
+						variant="inherit"
 						key={`styled-block-${node.position?.start?.offset}`}
 					>
 						{'children' in node &&
