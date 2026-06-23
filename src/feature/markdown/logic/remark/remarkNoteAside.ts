@@ -12,7 +12,8 @@ const remarkNoteAside: Plugin<[], Root> = () => (tree) => {
 			node.type === 'list' ||
 			node.type === 'code' ||
 			node.type === 'table' ||
-			node.type === 'thematicBreak'
+			node.type === 'thematicBreak' ||
+			node.type === 'html'
 		) {
 			node.data = {
 				...node.data,
