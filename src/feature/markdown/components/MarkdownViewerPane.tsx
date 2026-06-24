@@ -16,6 +16,7 @@ import {
 	remarkNoteAside,
 	remarkStyledBlock,
 	remarkRuby,
+	remarkFallbackDirective,
 } from '../logic/remark';
 
 import { unified, type Plugin } from 'unified';
@@ -41,6 +42,7 @@ const processor = unified()
 	.use(remarkNoteAside)
 	.use(remarkRuby)
 	.use(remarkStyledBlock)
+	.use(remarkFallbackDirective)
 	.use(remarkDebug);
 
 /**
