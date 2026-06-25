@@ -34,6 +34,7 @@ const remarkStyledBlock: Plugin<[], Root> = () => (tree) => {
 			{ type: 'paragraph' | 'heading' | 'noteAside' | 'styledBlock' }
 		>;
 
+		// TODO: handle other block nodes (list, code, blockquote, table, thematicBreak, html?) esp. thematicBreak
 		const [acc, tmp] = node.children?.reduce<[BlockNodes[], Nodes[]]>(
 			([acc, tmp], child, _ix) => {
 				// styleの子がブロックノードの場合、styledBlockと親子関係を逆転させる
