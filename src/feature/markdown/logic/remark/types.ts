@@ -66,15 +66,34 @@ declare module 'mdast' {
 		children: Nodes[];
 	}
 
+	/**
+	 * 折りたたみブロックノード
+	 */
+	export interface CollapseBlock extends Node {
+		type: 'collapseBlock';
+		data: Data & {
+			gridRow: number;
+			/** collapseBlock 直下の最初の子ノードに割り当てられた gridRow */
+			childGridRowStart: number;
+			/** 常時表示するラベル（インラインノード列）。後続プラグインで変換済み */
+			label: Nodes[];
+			/** true のとき初期状態で展開 */
+			defaultOpen: boolean;
+		};
+		children: Nodes[];
+	}
+
 	interface RootContentMap {
 		noteAside: NoteAside;
 		ruby: Ruby;
 		styledBlock: StyledBlock;
+		collapseBlock: CollapseBlock;
 	}
 
 	interface BlockContentMap {
 		noteAside: NoteAside;
 		styledBlock: StyledBlock;
+		collapseBlock: CollapseBlock;
 	}
 
 	interface PhrasingContentMap {
