@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Box, Divider, Link, Tooltip, Typography } from '@mui/material';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -13,9 +13,11 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 
 import {
+	remarkCollapseBlock,
 	remarkNoteAside,
 	remarkStyledBlock,
 	remarkRuby,
+	remarkFallbackDirective,
 } from '../logic/remark';
 
 import { unified, type Plugin } from 'unified';
@@ -38,9 +40,11 @@ const processor = unified()
 	.use(remarkFrontmatter, ['yaml'])
 	.use(remarkGfm)
 	.use(remarkDirective)
+	.use(remarkCollapseBlock)
 	.use(remarkNoteAside)
 	.use(remarkRuby)
 	.use(remarkStyledBlock)
+	.use(remarkFallbackDirective)
 	.use(remarkDebug);
 
 /**
@@ -70,6 +74,7 @@ function isMdastNode(node: unknown): node is Nodes {
 		case 'noteAside': // カスタム
 		case 'ruby': // カスタム
 		case 'styledBlock': // カスタム
+		case 'collapseBlock': // カスタム
 			return (
 				Array.isArray((node as { children?: unknown }).children) &&
 				(node as { children: unknown[] }).children.every(isMdastNode)
@@ -215,6 +220,150 @@ function convertToMdast(markdown: string) {
 }
 
 type PANE = 'LEFT' | 'RIGHT' | 'DOUBLE';
+
+// ---- Collapse グリッド制御 Context ----
+
+type CollapseGroupEntry = { childStart: number; childEnd: number };
+type CollapseGroupMap = Map<number, CollapseGroupEntry>; // headerGridRow -> 子行範囲
+type CollapseStateMap = Map<number, boolean>; // headerGridRow -> open
+
+type CollapseContextValue = {
+	state: CollapseStateMap;
+	groups: CollapseGroupMap;
+	toggle: (headerGridRow: number) => void;
+};
+
+const CollapseContext = React.createContext<CollapseContextValue>({
+	state: new Map(),
+	groups: new Map(),
+	toggle: () => {},
+});
+
+function computeMaxChildGridRow(nodes: Nodes[], currentMax: number): number {
+	for (const node of nodes) {
+		const gr = (node as { data?: { gridRow?: number } }).data?.gridRow ?? 0;
+		currentMax = Math.max(currentMax, gr);
+		if ('children' in node && Array.isArray(node.children)) {
+			currentMax = computeMaxChildGridRow(
+				node.children as Nodes[],
+				currentMax,
+			);
+		}
+	}
+	return currentMax;
+}
+
+function buildCollapseGroupMap(node: Nodes, groups: CollapseGroupMap): void {
+	if (node.type === 'collapseBlock') {
+		const { gridRow, childGridRowStart } = node.data;
+		const childEnd = computeMaxChildGridRow(
+			node.children as Nodes[],
+			childGridRowStart - 1,
+		);
+		groups.set(gridRow, { childStart: childGridRowStart, childEnd });
+		// 入れ子 collapse は子の中も走査
+	}
+	if ('children' in node && Array.isArray(node.children)) {
+		(node.children as Nodes[]).forEach((child) =>
+			buildCollapseGroupMap(child, groups),
+		);
+	}
+}
+
+/** gridRow が折りたたまれた範囲内にあるかを判定 */
+function isGridRowHidden(
+	gridRow: number,
+	groups: CollapseGroupMap,
+	state: CollapseStateMap,
+): boolean {
+	for (const [headerGR, { childStart, childEnd }] of groups) {
+		if (
+			!(state.get(headerGR) ?? false) &&
+			gridRow >= childStart &&
+			gridRow <= childEnd
+		) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// ---- Collapse ヘッダーコンポーネント ----
+
+type CollapseHeaderProps = {
+	headerGridRow: number;
+	label: Nodes[];
+	renderChild: (child: Nodes) => React.ReactNode[];
+};
+
+function CollapseHeader({
+	headerGridRow,
+	label,
+	renderChild: renderChildFn,
+}: CollapseHeaderProps) {
+	const { state, toggle } = useContext(CollapseContext);
+	const open = state.get(headerGridRow) ?? false;
+	return (
+		<Box
+			component="span"
+			onClick={() => toggle(headerGridRow)}
+			sx={{
+				cursor: 'pointer',
+				display: 'inline-flex',
+				alignItems: 'center',
+				gap: 0.5,
+				userSelect: 'none',
+				'&:hover': { opacity: 0.75 },
+			}}
+		>
+			<Box
+				component="span"
+				sx={{
+					fontSize: '0.75em',
+					transition: 'transform 0.2s',
+					transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+					display: 'inline-block',
+				}}
+			>
+				▶
+			</Box>
+			{label.map((n, i) => (
+				<React.Fragment key={i}>{renderChildFn(n)}</React.Fragment>
+			))}
+		</Box>
+	);
+}
+
+// ---- Collapse 対応 Box (グリッドセル) ----
+
+type CollapseVisibleBoxProps = {
+	gridRow: number;
+	pane: PANE;
+	boxKey: string;
+	children: React.ReactNode;
+};
+
+function CollapseVisibleBox({
+	gridRow,
+	pane,
+	boxKey,
+	children,
+}: CollapseVisibleBoxProps) {
+	const { state, groups } = useContext(CollapseContext);
+	const hidden = isGridRowHidden(gridRow, groups, state);
+	return (
+		<Box
+			key={boxKey}
+			sx={{
+				gridRow,
+				gridColumn: paneToGridColumn(pane),
+				...(hidden ? { display: 'none' } : {}),
+			}}
+		>
+			{children}
+		</Box>
+	);
+}
 
 type RenderMeta = [React.ReactNode, number, PANE];
 function renderChild(child: Nodes): React.ReactNode[] {
@@ -719,10 +868,30 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 				];
 			}
 
+			case 'collapseBlock': {
+				const { gridRow = 0, label } = node.data;
+				const key = `collapse-${node.position?.start?.offset}`;
+				// ヘッダーは LEFT 列に配置、子ノードはそのままフラットに展開
+				const header: RenderMeta = [
+					<CollapseHeader
+						key={key}
+						headerGridRow={gridRow}
+						label={label}
+						renderChild={renderChild}
+					/>,
+					gridRow,
+					'LEFT',
+				];
+				const childMetas = node.children
+					? node.children.flatMap((child) =>
+							renderNodeWithMeta(child),
+						)
+					: [];
+				return [header, ...childMetas];
+			}
 			case 'textDirective':
 			case 'leafDirective':
 			case 'containerDirective': {
-				console.warn('Unsupported node type:', node.type, node);
 				const UnknownContent = (
 					<React.Fragment
 						key={`unknown-${node.position?.start?.offset}`}
@@ -773,24 +942,22 @@ function paneToGridColumn(pane: PANE): string {
 
 function renderNode(node: Nodes): React.ReactNode {
 	const rows = renderNodeWithMeta(node);
-	// paneで振り分ける必要あり
 	return (
 		<React.Fragment>
 			{rows
 				.reduce<[React.ReactNode[], number]>(
-					([acc, gridRowIndex], [content, gridRow, pane], _ix) => {
+					([acc, gridRowIndex], [content, gridRow, pane]) => {
 						return [
 							[
 								...acc,
-								<Box
+								<CollapseVisibleBox
 									key={`box-${gridRowIndex}`}
-									sx={{
-										gridRow,
-										gridColumn: paneToGridColumn(pane),
-									}}
+									boxKey={`box-${gridRowIndex}`}
+									gridRow={gridRow}
+									pane={pane}
 								>
 									{content}
-								</Box>,
+								</CollapseVisibleBox>,
 							],
 							gridRowIndex + 1,
 						];
@@ -809,33 +976,65 @@ function MdastRenderer({
 }: {
 	ast: ReturnType<typeof convertToMdast>['ast'];
 }) {
+	const [collapseState, setCollapseState] = useState<CollapseStateMap>(() => {
+		const m = new Map<number, boolean>();
+		function init(node: Nodes) {
+			if (node.type === 'collapseBlock') {
+				m.set(node.data.gridRow, node.data.defaultOpen);
+			}
+			if ('children' in node && Array.isArray(node.children)) {
+				(node.children as Nodes[]).forEach(init);
+			}
+		}
+		init(ast);
+		return m;
+	});
+
+	const collapseGroups = useMemo<CollapseGroupMap>(() => {
+		const m = new Map<number, CollapseGroupEntry>();
+		buildCollapseGroupMap(ast, m);
+		return m;
+	}, [ast]);
+
+	const toggle = useCallback((headerGridRow: number) => {
+		setCollapseState((prev) => {
+			const next = new Map(prev);
+			next.set(headerGridRow, !(next.get(headerGridRow) ?? false));
+			return next;
+		});
+	}, []);
+
 	return (
-		<Box
-			sx={{
-				display: 'grid',
-				gridTemplateColumns: '3fr 1fr',
-				'& h1': {
-					fontSize: '2.5rem',
-				},
-				'& h2': {
-					fontSize: '2rem',
-				},
-				'& h3': {
-					fontSize: '1.75rem',
-				},
-				'& h4': {
-					fontSize: '1.5rem',
-				},
-				'& h5': {
-					fontSize: '1.375rem',
-				},
-				'& h6': {
-					fontSize: '1.25rem',
-				},
-			}}
+		<CollapseContext.Provider
+			value={{ state: collapseState, groups: collapseGroups, toggle }}
 		>
-			{renderNode(ast)}
-		</Box>
+			<Box
+				sx={{
+					display: 'grid',
+					gridTemplateColumns: '3fr 1fr',
+					'& h1': {
+						fontSize: '2.5rem',
+					},
+					'& h2': {
+						fontSize: '2rem',
+					},
+					'& h3': {
+						fontSize: '1.75rem',
+					},
+					'& h4': {
+						fontSize: '1.5rem',
+					},
+					'& h5': {
+						fontSize: '1.375rem',
+					},
+					'& h6': {
+						fontSize: '1.25rem',
+					},
+				}}
+			>
+				{renderNode(ast)}
+			</Box>
+		</CollapseContext.Provider>
 	);
 }
 
