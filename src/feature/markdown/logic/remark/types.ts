@@ -62,7 +62,8 @@ declare module 'mdast' {
 	 */
 	export interface StyledBlock extends Node {
 		type: 'styledBlock';
-		data: Data & { styleName: string };
+		/** null のとき親スタイルをリセット（className なし） */
+		data: Data & { styleName: string | null };
 		children: Nodes[];
 	}
 
