@@ -31,10 +31,17 @@ const remarkStyledBlock: Plugin<[], Root> = () => (tree) => {
 
 		type BlockNodes = Extract<
 			Nodes,
-			{ type: 'paragraph' | 'heading' | 'noteAside' | 'styledBlock' }
+			{
+				type:
+					| 'paragraph'
+					| 'heading'
+					| 'noteAside'
+					| 'styledBlock'
+					| 'thematicBreak'
+					| 'html';
+			}
 		>;
 
-		// TODO: handle other block nodes (list, code, blockquote, table, thematicBreak, html?) esp. thematicBreak
 		const [acc, tmp] = node.children?.reduce<[BlockNodes[], Nodes[]]>(
 			([acc, tmp], child, _ix) => {
 				// styleの子がブロックノードの場合、styledBlockと親子関係を逆転させる
@@ -45,11 +52,7 @@ const remarkStyledBlock: Plugin<[], Root> = () => (tree) => {
 					case 'noteAside': {
 						// tmpに溜まっているノードがあればstyledBlockで括る
 						const insertion =
-							tmp.length > 0
-								? (() => {
-										return [createStyledBlock(tmp)];
-									})()
-								: [];
+							tmp.length > 0 ? [createStyledBlock(tmp)] : [];
 
 						const descendant = child.children;
 						const styled = createStyledBlock(descendant);
@@ -67,6 +70,14 @@ const remarkStyledBlock: Plugin<[], Root> = () => (tree) => {
 						// 内側のstyledBlockを外側のstyleで包んでスタイル文脈を保つ
 						const wrapped = createStyledBlock([child]);
 						return [[...acc, ...insertion, wrapped], []];
+					}
+					case 'thematicBreak':
+					case 'html': {
+						// children を持たないブロック要素。tmp をフラッシュしてそのまま pass-through。
+						// remarkNoteAside が付与した gridRow を保持するため styledBlock で包まない。
+						const insertion =
+							tmp.length > 0 ? [createStyledBlock(tmp)] : [];
+						return [[...acc, ...insertion, child], []];
 					}
 					default: {
 						return [acc, [...tmp, child]];
