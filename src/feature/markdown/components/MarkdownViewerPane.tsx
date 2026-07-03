@@ -458,21 +458,32 @@ function renderNodeWithMeta(node: Nodes): RenderMeta[] {
 			}
 			case 'styledBlock': {
 				const { styleName } = node.data;
+				const key = `styled-block-${node.position?.start?.offset}`;
+				const children = node.children?.map((child, i) => (
+					<React.Fragment key={`${key}-child-${i}`}>
+						{renderChild(child)}
+					</React.Fragment>
+				));
+				if (styleName === null) {
+					// リセット: 親スタイルを引き継がず children をそのまま描画
+					return [
+						[
+							<React.Fragment key={key}>
+								{children}
+							</React.Fragment>,
+							0,
+							'LEFT',
+						],
+					];
+				}
 				const StyledBlockContent = (
 					<Typography
 						className={styleName}
 						component="span"
 						variant="inherit"
-						key={`styled-block-${node.position?.start?.offset}`}
+						key={key}
 					>
-						{'children' in node &&
-							node.children?.map((child, i) => (
-								<React.Fragment
-									key={`styled-block-child-${node.position?.start?.offset}-${i}`}
-								>
-									{renderChild(child)}
-								</React.Fragment>
-							))}
+						{children}
 					</Typography>
 				);
 				return [[StyledBlockContent, 0, 'LEFT']];
