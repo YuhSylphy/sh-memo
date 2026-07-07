@@ -6,6 +6,7 @@ import {
 	from,
 	map,
 	merge,
+	mergeMap,
 	of,
 	switchMap,
 } from 'rxjs';
@@ -123,9 +124,40 @@ const saveDocumentEpic: AppEpic = (action$, state$) =>
 		}),
 	);
 
+/**
+ * documentIndexLoaded 後に全ドキュメントを並列プリフェッチして SW キャッシュを温める。
+ * 取得結果は破棄（副作用として Service Worker にキャッシュさせることが目的）。
+ * オフライン時はサイレントにスキップ。
+ */
+const prewarmCacheEpic: AppEpic = (action$) =>
+	action$.pipe(
+		filter(markdownActions.documentIndexLoaded.match),
+		switchMap((action) => {
+			if (!navigator.onLine) return of();
+			const items = Object.values(
+				Object.fromEntries(
+					action.payload.map((item) => [item.id, item]),
+				),
+			);
+			return from(items).pipe(
+				mergeMap(
+					(item) =>
+						from(fetchRepositoryFile(item.path)).pipe(
+							catchError(() => of(null)), // 個別失敗は無視
+						),
+					3, // concurrency
+				),
+				// 全件取得しても dispatch するアクションなし
+				map(() => ({ type: '@@pwa/prewarm-noop' as const })),
+				catchError(() => of()),
+			);
+		}),
+	);
+
 export const markdownEpic: AppEpic = (action$, state$, dependencies) =>
 	merge(
 		syncDocumentIndexEpic(action$, state$, dependencies),
 		loadDocumentEpic(action$, state$, dependencies),
 		saveDocumentEpic(action$, state$, dependencies),
+		prewarmCacheEpic(action$, state$, dependencies),
 	);
